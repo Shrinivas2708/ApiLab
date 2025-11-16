@@ -66,10 +66,6 @@ bun run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## 📚 Documentation
-
-Full technical specification and architecture documentation is available in [SPECIFICATION.md](SPECIFICATION.md).
-
 ### Key Documentation Sections:
 - [Architecture Overview](SPECIFICATION.md#system-architecture)
 - [Database Schema](SPECIFICATION.md#database-design-philosophy)
