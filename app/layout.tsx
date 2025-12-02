@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import Navbar from "@/components/navbar";
+import { Sidebar } from "@/components/sidebar";
+import AppLayout from "@/components/resizeable-layout";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,7 +18,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "ApiLabs",
-  description: "A full-featured API testing platform an open-source alternative to Postman with collections, environments, team collaboration, and mock servers.",
+  description:
+    "A full-featured API testing platform an open-source alternative to Postman with collections, environments, team collaboration, and mock servers.",
 };
 
 export default function RootLayout({
@@ -26,16 +30,15 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        
+        className={`${geistSans.variable} ${geistMono.variable} antialiased `}
       >
-         <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-        {children}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AppLayout>{children}</AppLayout>
         </ThemeProvider>
       </body>
     </html>
