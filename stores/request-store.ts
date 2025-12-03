@@ -11,17 +11,18 @@ export type KeyValue = {
 export type RequestState = {
   url: string;
   method: string;
+  reqMode: 'proxy' | 'browser'; // <--- NEW: Track the mode
   queryParams: KeyValue[];
   headers: KeyValue[];
   body: string;
 
-  // These should NOT be persisted
   response: any | null;
   loading: boolean;
   error: string | null;
 
   setUrl: (url: string) => void;
   setMethod: (method: string) => void;
+  setReqMode: (mode: 'proxy' | 'browser') => void; // <--- NEW ACTION
   setQueryParams: (params: KeyValue[]) => void;
   setHeaders: (headers: KeyValue[]) => void;
   setBody: (body: string) => void;
@@ -35,17 +36,17 @@ export const useRequestStore = create<RequestState>()(
     (set) => ({
       url: 'https://echo.hoppscotch.io',
       method: 'GET',
+      reqMode: 'proxy', // Default to proxy for reliability
       queryParams: [{ id: '1', key: '', value: '', enabled: true }],
       headers: [{ id: '1', key: '', value: '', enabled: true }],
       body: '',
-
-      // runtime-only (no persist)
       response: null,
       loading: false,
       error: null,
 
       setUrl: (url) => set({ url }),
       setMethod: (method) => set({ method }),
+      setReqMode: (reqMode) => set({ reqMode }), 
       setQueryParams: (queryParams) => set({ queryParams }),
       setHeaders: (headers) => set({ headers }),
       setBody: (body) => set({ body }),
@@ -55,15 +56,13 @@ export const useRequestStore = create<RequestState>()(
     }),
     {
       name: 'apilab-request-store',
-
-      // 🚀 KEY FIX: EXCLUDE response, loading, error
       partialize: (state) => ({
         url: state.url,
         method: state.method,
+        reqMode: state.reqMode, // Persist user preference
         queryParams: state.queryParams,
         headers: state.headers,
         body: state.body,
-        // ⛔ exclude response, loading, error
       }),
     }
   )
