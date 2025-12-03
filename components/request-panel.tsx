@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useRef } from "react";
 import { useRequestStore } from "@/stores/request-store";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Play, Save } from "lucide-react";
+import { Cross, Play, Save, X } from "lucide-react";
 import { KeyValueTable } from "./key-value-table";
 import { Textarea } from "./ui/textarea"; 
 import axios from "axios";
@@ -49,6 +49,7 @@ function RequestPanel() {
     queryParams,
     headers,
     body,
+    loading,
     setUrl,
     setMethod,
     setQueryParams,
@@ -58,12 +59,10 @@ function RequestPanel() {
     setResponse,
     setError,
   } = useRequestStore();
-
+  const abortRef = useRef<AbortController | null>(null)
   const handleSend = async () => {
     setLoading(true);
     setError(null);
-    const startTime = performance.now();
-
     try {
       const headerObj = headers.reduce((acc, curr) => {
         if (curr.enabled && curr.key) acc[curr.key] = curr.value;
@@ -74,13 +73,18 @@ function RequestPanel() {
         if (curr.enabled && curr.key) acc[curr.key] = curr.value;
         return acc;
       }, {} as Record<string, string>);
-
+      
+    const controller = new AbortController();
+    abortRef.current = controller
+    const startTime = performance.now();
       const res = await axios.post("/api/proxy", {
         url,
         method,
         headers: headerObj,
         params: paramObj,
         body,
+      },{
+        signal: abortRef.current.signal
       });
 
       const endTime = performance.now();
@@ -91,6 +95,7 @@ function RequestPanel() {
       setLoading(false);
     }
   };
+  
 const currentMethodColor =
   HTTP_METHODS.find((m) => m.type === method)?.color || "";
 
@@ -118,9 +123,16 @@ const currentMethodColor =
           onChange={(e) => setUrl(e.target.value)}
         />
 
-        <Button onClick={handleSend} className="bg-primary text-primary-foreground font-bold">
-          <Play fill="currentColor" className="mr-2 h-4 w-4" /> Send
+        {
+          loading ? 
+          <Button onClick={async ()=> await abortRef.current?.abort()} className="bg-primary text-primary-foreground font-bold">
+          <X fill="currentColor" className=" h-4 w-4 " /> Cancel
         </Button>
+        :
+        <Button onClick={handleSend} className="bg-primary text-primary-foreground font-bold">
+          <Play fill="currentColor" className=" h-4 w-4 " /> Send
+        </Button>
+        }
         <Button variant="outline" size="icon">
           <Save className="h-4 w-4" />
         </Button>

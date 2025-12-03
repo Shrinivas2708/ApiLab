@@ -21,7 +21,7 @@ export default function RestPage() {
       </Panel>
       <PanelResizeHandle className="w-px bg-border" />
 
-      <Panel minSize={20} maxSize={30} >
+      <Panel minSize={20} maxSize={30} className="hidden md:block">
         <CollectionsPanel />
       </Panel>
     </PanelGroup>
