@@ -4,7 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import Navbar from "@/components/navbar";
 import { Sidebar } from "@/components/sidebar";
-import AppLayout from "@/components/resizeable-layout";
+import Footer from "@/components/footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,21 +24,33 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased `}
-      >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <AppLayout>{children}</AppLayout>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+         <div className="h-screen w-full flex flex-col overflow-hidden">
+          {/* NAVBAR */}
+          <Navbar />
+
+          {/* FRAME: SIDEBAR + PAGE CONTENT */}
+          <div className="flex flex-1 overflow-hidden">
+            
+            {/* LEFT FIXED SIDEBAR */}
+            <div className=" border-r bg-background h-full ">
+          <Sidebar />
+        </div>
+
+            {/* PAGE CONTENT (each page manages its own layout) */}
+            <div className="flex-1 overflow-hidden">
+              {children}
+            </div>
+
+          </div>
+  <Footer />
+  </div> 
         </ThemeProvider>
       </body>
     </html>
