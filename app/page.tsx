@@ -8,18 +8,18 @@ import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 export default function RestPage() {
   return (
     <PanelGroup direction="horizontal" className="h-full">
-      <Panel minSize={40}>
+      <Panel minSize={60}>
         <PanelGroup direction="vertical">
-          <Panel defaultSize={60}>
+          <Panel >
             <RequestPanel/>
           </Panel>
-          <PanelResizeHandle className="h-1 bg-border" />
-          <Panel maxSize={80} minSize={20}>
+          <PanelResizeHandle className="h-px bg-border" />
+          <Panel maxSize={60} minSize={30}>
             <ResponsePanel />
           </Panel>
         </PanelGroup>
       </Panel>
-      <PanelResizeHandle className="w-1 bg-border" />
+      <PanelResizeHandle className="w-px bg-border" />
 
       <Panel minSize={20} maxSize={30} >
         <CollectionsPanel />

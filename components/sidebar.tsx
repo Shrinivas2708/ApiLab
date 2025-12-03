@@ -65,7 +65,7 @@ function SidebarItem({
       href={href}
       className={`
         relative text-xs flex flex-col items-center gap-2 
-        transition-colors hover:bg-[#f3f4f6]  dark:hover:bg-[#1b1b1b] px-4 py-2 
+        transition-colors hover:bg-[#f3f4f6]  dark:hover:bg-[#1b1b1b] px-2 py-2 
         ${active ? "dark:text-white text-black " : "text-muted-foreground hover:text-black dark:hover:text-white"}
       `}
     >
