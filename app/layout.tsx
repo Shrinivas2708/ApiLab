@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import Navbar from "@/components/navbar";
 import { Sidebar } from "@/components/sidebar";
 import Footer from "@/components/footer";
+import React from "react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,28 +30,27 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-         <div className="h-screen w-full flex flex-col overflow-hidden">
-          {/* NAVBAR */}
-          <Navbar />
+          <div className="h-screen w-full flex flex-col overflow-hidden">
+            <Navbar />
+           
+            <div className="flex flex-1 overflow-hidden">
+              <div className=" border-r bg-background h-full hidden md:block ">
+                <Sidebar />
+              </div>
 
-          {/* FRAME: SIDEBAR + PAGE CONTENT */}
-          <div className="flex flex-1 overflow-hidden">
-            
-            {/* LEFT FIXED SIDEBAR */}
-            <div className=" border-r bg-background h-full ">
-          <Sidebar />
-        </div>
-
-            {/* PAGE CONTENT (each page manages its own layout) */}
-            <div className="flex-1 overflow-hidden">
-              {children}
+              <div className="flex-1 overflow-hidden">{children}</div>
             </div>
-
+            <div className="hidden md:block ">
+              <Footer />
+            </div>
+            <div className="block md:hidden">
+              <Sidebar/>
+            </div>
           </div>
-  <Footer />
-  </div> 
         </ThemeProvider>
       </body>
     </html>

@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
@@ -15,9 +14,12 @@ export type RequestState = {
   queryParams: KeyValue[];
   headers: KeyValue[];
   body: string;
+
+  // These should NOT be persisted
   response: any | null;
   loading: boolean;
   error: string | null;
+
   setUrl: (url: string) => void;
   setMethod: (method: string) => void;
   setQueryParams: (params: KeyValue[]) => void;
@@ -36,6 +38,8 @@ export const useRequestStore = create<RequestState>()(
       queryParams: [{ id: '1', key: '', value: '', enabled: true }],
       headers: [{ id: '1', key: '', value: '', enabled: true }],
       body: '',
+
+      // runtime-only (no persist)
       response: null,
       loading: false,
       error: null,
@@ -50,7 +54,17 @@ export const useRequestStore = create<RequestState>()(
       setError: (error) => set({ error }),
     }),
     {
-      name: 'apilab-request-store', 
+      name: 'apilab-request-store',
+
+      // 🚀 KEY FIX: EXCLUDE response, loading, error
+      partialize: (state) => ({
+        url: state.url,
+        method: state.method,
+        queryParams: state.queryParams,
+        headers: state.headers,
+        body: state.body,
+        // ⛔ exclude response, loading, error
+      }),
     }
   )
 );

@@ -1,9 +1,9 @@
 import { json } from "@codemirror/lang-json";
-import { xml } from "@codemirror/lang-xml";
 import { html } from "@codemirror/lang-html";
+import { xml } from "@codemirror/lang-xml";
 import { javascript } from "@codemirror/lang-javascript";
 
-export function formatResponse(contentType: string = "", data: any) {
+export function formatResponse(contentType: string, data: any) {
   let formatted = "";
   let extension = null;
 
@@ -11,60 +11,21 @@ export function formatResponse(contentType: string = "", data: any) {
 
   const text = typeof data === "string" ? data : JSON.stringify(data);
 
-  if (contentType.includes("application/json")) {
-    try {
-      formatted = JSON.stringify(
-        typeof data === "string" ? JSON.parse(data) : data,
-        null,
-        2
-      );
-    } catch {
-      formatted = text;
-    }
+  if (contentType.includes("json")) {
     extension = json();
-  }
-
-  else if (
-    contentType.includes("application/xml") ||
-    contentType.includes("text/xml")
-  ) {
-    formatted = prettyXML(text);
-    extension = xml();
-  }
-
-  else if (contentType.includes("text/html")) {
-    formatted = prettyHTML(text);
+    formatted = JSON.stringify(data, null, 2);
+  } else if (contentType.includes("html")) {
     extension = html();
-  }
-
-  else if (contentType.includes("application/javascript")) {
-    formatted = text;
+    formatted = text.replace(/></g, ">\n<");
+  } else if (contentType.includes("xml")) {
+    extension = xml();
+    formatted = text.replace(/></g, ">\n<");
+  } else if (contentType.includes("javascript")) {
     extension = javascript();
-  }
-
-  else {
     formatted = text;
-    extension = null;
+  } else {
+    formatted = text;
   }
 
   return { formatted, extension };
-}
-
-function prettyXML(input: string) {
-  try {
-    const P = new DOMParser();
-    const xmlDoc = P.parseFromString(input, "application/xml");
-    const serializer = new XMLSerializer();
-    const xmlStr = serializer.serializeToString(xmlDoc);
-
-    return xmlStr.replace(/(>)(<)(\/*)/g, "$1\n$2$3");
-  } catch {
-    return input;
-  }
-}
-
-function prettyHTML(input: string) {
-  return input
-    .replace(/(>)(<)/g, "$1\n$2")
-    .replace(/\n\s*\n/g, "\n");
 }

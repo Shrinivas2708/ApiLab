@@ -40,7 +40,7 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <div className="h-full border-r   flex flex-col">
+    <div className="h-full border-r   flex md:flex-col justify-evenly md:justify-normal">
       <SidebarItem label="REST" icon={Link2} href="/" active={pathname === "/"} />
       <SidebarItem label="GraphQL" icon={GraphQL} href="/graphql" active={pathname === "/graphql"} />
       <SidebarItem label="Realtime" icon={Globe} href="/realtime" active={pathname === "/realtime"} />
@@ -64,13 +64,13 @@ function SidebarItem({
     <Link
       href={href}
       className={`
-        relative text-xs flex flex-col items-center gap-2 
-        transition-colors hover:bg-[#f3f4f6]  dark:hover:bg-[#1b1b1b] px-2 py-2 
+        relative text-xs flex flex-col items-center gap-2  w-full
+        transition-colors hover:bg-[#f3f4f6]  dark:hover:bg-[#1b1b1b] px-2 py-2  
         ${active ? "dark:text-white text-black " : "text-muted-foreground hover:text-black dark:hover:text-white"}
       `}
     >
       {active && (
-        <div className="absolute left-0 top-0 h-full w-1 dark:bg-muted-foreground rounded-r bg-black" />
+        <div className="absolute md:left-0 rotate-90 md:rotate-0 -bottom-6  md:top-0 h-full w-1  dark:bg-muted-foreground rounded-r bg-black" />
       )}
 
       <Icon width={20} height={20}  />

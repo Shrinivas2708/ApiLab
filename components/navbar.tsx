@@ -8,8 +8,8 @@ function Navbar() {
     <div className='w-full flex justify-between py-3 px-5  items-center border-b'>
         <h1 className="text-2xl font-bold hover:text-white/70 hover:cursor-pointer">ApiLab</h1>
        <div className="flex gap-3">
-         <ModeToggle/>
-         <Button variant={"outline"}>
+         <ModeToggle />
+         <Button variant={"outline"} className="hidden md:flex" >
           <CloudCheck />  Save My Workspace
          </Button>
         <Button className="font-bold">
