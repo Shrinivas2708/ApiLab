@@ -36,7 +36,7 @@ export const useRequestStore = create<RequestState>()(
     (set) => ({
       url: 'https://echo.hoppscotch.io',
       method: 'GET',
-      reqMode: 'proxy', // Default to proxy for reliability
+      reqMode: 'browser', // Default to proxy for reliability
       queryParams: [{ id: '1', key: '', value: '', enabled: true }],
       headers: [{ id: '1', key: '', value: '', enabled: true }],
       body: '',

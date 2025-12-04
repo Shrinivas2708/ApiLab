@@ -7,7 +7,7 @@ import { EditorView } from "@codemirror/view";
 import { detectResponseType } from "@/utils/detect-type";
 import { formatResponse } from "@/utils/format-response";
 import { Badge } from "./ui/badge";
-
+import Image from "next/image"
 export default function ResponsePanel() {
   const { response, loading, error } = useRequestStore();
 
@@ -31,27 +31,14 @@ export default function ResponsePanel() {
 
   if (!response)
     return (
-      <div className="h-full flex flex-col items-center justify-center text-muted-foreground border-l">
+      <div className="h-full flex flex-col items-center justify-center text-muted-foreground border-l text-sm md:text-base">
         <p>Enter a URL and click Send to get a response.</p>
       </div>
     );
-
-  /* ----------------------------------------------------
-   * DATA EXTRACTION
-   * ---------------------------------------------------- */
   const { isBinary, base64, data, contentType } = response;
   const type = detectResponseType(response.headers, isBinary, contentType);
-
-  /* ----------------------------------------------------
-   * TEXT FORMAT HANDLING (json / html / xml / text)
-   * ---------------------------------------------------- */
   const { formatted, extension } = formatResponse(contentType, data);
-
-  /* ----------------------------------------------------
-   * RENDERERS
-   * ---------------------------------------------------- */
   function renderContent() {
-    // TEXT-BASED FORMATS
     if (["json", "xml", "html", "text"].includes(type)) {
       return (
         <CodeMirror
@@ -78,7 +65,8 @@ export default function ResponsePanel() {
     if (type === "image") {
       return (
         <div className="w-full h-full flex items-center justify-center bg-black">
-          <img
+          <Image
+          alt="Unable to load "
             className="max-w-full max-h-full object-contain"
             src={`data:${contentType};base64,${base64}`}
           />

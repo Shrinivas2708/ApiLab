@@ -10,7 +10,7 @@ export default function RestPage() {
     <PanelGroup direction="horizontal" className="h-full">
       <Panel minSize={60}>
         <PanelGroup direction="vertical">
-          <Panel >
+          <Panel className="min-h-0">
             <RequestPanel/>
           </Panel>
           <PanelResizeHandle className="h-px bg-border" />

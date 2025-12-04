@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -32,51 +31,58 @@ export function KeyValueTable({ items, setItems }: KeyValueTableProps) {
   };
 
   return (
-    <div className="flex flex-col gap-2 p-4">
-      <div className="flex font-mono text-xs text-muted-foreground px-2">
+    <div className="flex flex-col h-full">
+      {/* Fixed Header */}
+      <div className="flex font-mono text-xs text-muted-foreground px-6 py-2 border-b bg-background sticky top-0 z-10">
         <div className="w-8"></div>
         <div className="flex-1">Key</div>
         <div className="flex-1">Value</div>
         <div className="w-8"></div>
       </div>
-      {items.map((item) => (
-        <div key={item.id} className="flex gap-2 items-center group">
-          <Checkbox
-            checked={item.enabled}
-            onCheckedChange={(checked) =>
-              updateItem(item.id, "enabled", checked)
-            }
-          />
-          <Input
-            className="flex-1 h-8 font-mono text-sm"
-            placeholder="Key"
-            value={item.key}
-            onChange={(e) => updateItem(item.id, "key", e.target.value)}
-          />
-          <Input
-            className="flex-1 h-8 font-mono text-sm"
-            placeholder="Value"
-            value={item.value}
-            onChange={(e) => updateItem(item.id, "value", e.target.value)}
-          />
+      
+      {/* Scrollable Content Area */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+        <div className="flex flex-col gap-2 p-4">
+          {items.map((item) => (
+            <div key={item.id} className="flex gap-2 items-center group">
+              <Checkbox
+                checked={item.enabled}
+                onCheckedChange={(checked) =>
+                  updateItem(item.id, "enabled", checked)
+                }
+              />
+              <Input
+                className="flex-1 h-8 font-mono text-sm"
+                placeholder="Key"
+                value={item.key}
+                onChange={(e) => updateItem(item.id, "key", e.target.value)}
+              />
+              <Input
+                className="flex-1 h-8 font-mono text-sm"
+                placeholder="Value"
+                value={item.value}
+                onChange={(e) => updateItem(item.id, "value", e.target.value)}
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() => deleteItem(item.id)}
+              >
+                <Trash2 size={14} />
+              </Button>
+            </div>
+          ))}
           <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={() => deleteItem(item.id)}
+            variant="outline"
+            size="sm"
+            onClick={addItem}
+            className="self-start mt-2 gap-2"
           >
-            <Trash2 size={14} />
+            <Plus size={14} /> Add New
           </Button>
         </div>
-      ))}
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={addItem}
-        className="self-start mt-2 gap-2"
-      >
-        <Plus size={14} /> Add New
-      </Button>
+      </div>
     </div>
   );
 }
