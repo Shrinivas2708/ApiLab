@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ApiLabs",
+  title: "ApiLabs - Open source API Testing Tool",
   description:
     "A full-featured API testing platform an open-source alternative to Postman with collections, environments, team collaboration, and mock servers.",
 };

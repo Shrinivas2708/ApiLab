@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useRef } from "react";
 import { useRequestStore } from "@/stores/request-store";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -41,7 +41,6 @@ function RequestPanel() {
     const startTime = performance.now();
 
     try {
-      // Prepare Headers & Params
       const headerObj = headers.reduce((acc, curr) => {
         if (curr.enabled && curr.key) acc[curr.key] = curr.value;
         return acc;
@@ -64,7 +63,6 @@ function RequestPanel() {
             body,
           }),
           signal: abortRef.current.signal,
-          // 🚀 OPTIMIZATION: Use keepalive for the connection to your own server
           keepalive: true, 
         });
 
@@ -151,7 +149,7 @@ function RequestPanel() {
 
   return (
     <div className="flex flex-col h-full min-h-0 bg-background">
-      <div className="block md:flex gap-2 space-y-2 md:space-y-0 p-4 border-b items-center flex-col md:flex-row border ">
+      <div className="block md:flex gap-2 space-y-2 md:space-y-0 p-4 border-b items-center flex-col md:flex-row  ">
         <div className="flex gap-2 md:w-[90%]">
           <Select value={method} onValueChange={setMethod}>
             <SelectTrigger className={`w-[100px] font-bold ${currentMethodColor}`}>
