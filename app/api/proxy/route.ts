@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// 🚀 OPTIMIZATION: Use Node.js runtime for better Buffer performance with large files
+export const runtime = 'nodejs'; 
+
 export async function POST(req: NextRequest) {
   try {
     const { method, url, headers, params, body } = await req.json();
 
-    // Build URL with query params manually (fetch doesn't support `params`)
+    // Build URL with query params
     const fullUrl = new URL(url);
     if (params) {
       Object.entries(params).forEach(([k, v]) => {
@@ -12,12 +15,19 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // ⏱️ START TIMER (Server Side)
+    const startTime = performance.now();
+
     const upstream = await fetch(fullUrl.toString(), {
       method,
       headers,
       body: body ? JSON.stringify(JSON.parse(body)) : undefined,
-      // fetch never throws on non-2xx (no need validateStatus)
+      keepalive:true,
+      cache:'no-store'
     });
+
+    // ⏱️ STOP TIMER: Capture pure upstream latency
+    const upstreamLatency = Math.round(performance.now() - startTime);
 
     const contentType = upstream.headers.get("content-type") || "";
     const isBinary =
@@ -27,41 +37,41 @@ export async function POST(req: NextRequest) {
       contentType.includes("application/pdf") ||
       contentType.includes("application/octet-stream");
 
-    // Read as ArrayBuffer (much cheaper than axios's wrapper)
-    const buffer = Buffer.from(await upstream.arrayBuffer());
+    // 🚀 OPTIMIZATION: Read directly into Buffer
+    const arrayBuffer = await upstream.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
 
-    if (!isBinary) {
-      const text = buffer.toString("utf8");
-
-      let parsed: any = text;
-      if (contentType.includes("json")) {
-        try {
-          parsed = JSON.parse(text);
-        } catch {}
-      }
-
-      return NextResponse.json({
-        status: upstream.status,
-        statusText: upstream.statusText,
-        headers: Object.fromEntries(upstream.headers.entries()),
-        isBinary: false,
-        data: parsed,
-        size: text.length,
-        contentType,
-      });
-    }
-
-    const base64 = buffer.toString("base64");
-
-    return NextResponse.json({
+    // Prepare response payload
+    const responsePayload = {
       status: upstream.status,
       statusText: upstream.statusText,
       headers: Object.fromEntries(upstream.headers.entries()),
-      isBinary: true,
-      base64,
+      isBinary,
       contentType,
-      size: base64.length,
-    });
+      size: buffer.length,
+      time: upstreamLatency, // Send server-side latency to frontend
+      data: null as any,
+      base64: "",
+    };
+
+    if (isBinary) {
+      responsePayload.base64 = buffer.toString("base64");
+    } else {
+      const text = buffer.toString("utf8");
+      try {
+        // Try parsing JSON only if content-type suggests it
+        if (contentType.includes("json")) {
+           responsePayload.data = JSON.parse(text);
+        } else {
+           responsePayload.data = text;
+        }
+      } catch {
+        responsePayload.data = text;
+      }
+    }
+
+    return NextResponse.json(responsePayload);
+
   } catch (err: any) {
     return NextResponse.json(
       { error: err.message },

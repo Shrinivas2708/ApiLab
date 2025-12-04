@@ -11,7 +11,7 @@ export type KeyValue = {
 export type RequestState = {
   url: string;
   method: string;
-  reqMode: 'proxy' | 'browser'; // <--- NEW: Track the mode
+  reqMode: 'proxy' | 'browser'; 
   queryParams: KeyValue[];
   headers: KeyValue[];
   body: string;
@@ -19,16 +19,17 @@ export type RequestState = {
   response: any | null;
   loading: boolean;
   error: string | null;
-
+  CORSError:boolean;
   setUrl: (url: string) => void;
   setMethod: (method: string) => void;
-  setReqMode: (mode: 'proxy' | 'browser') => void; // <--- NEW ACTION
+  setReqMode: (mode: 'proxy' | 'browser') => void;
   setQueryParams: (params: KeyValue[]) => void;
   setHeaders: (headers: KeyValue[]) => void;
   setBody: (body: string) => void;
   setResponse: (response: any) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
+  setCORSError: (CORSError:boolean) => void;
 };
 
 export const useRequestStore = create<RequestState>()(
@@ -43,7 +44,7 @@ export const useRequestStore = create<RequestState>()(
       response: null,
       loading: false,
       error: null,
-
+      CORSError:false,
       setUrl: (url) => set({ url }),
       setMethod: (method) => set({ method }),
       setReqMode: (reqMode) => set({ reqMode }), 
@@ -53,13 +54,14 @@ export const useRequestStore = create<RequestState>()(
       setResponse: (response) => set({ response }),
       setLoading: (loading) => set({ loading }),
       setError: (error) => set({ error }),
+      setCORSError:(CORSError) => set({CORSError}),
     }),
     {
       name: 'apilab-request-store',
       partialize: (state) => ({
         url: state.url,
         method: state.method,
-        reqMode: state.reqMode, // Persist user preference
+        reqMode: state.reqMode, 
         queryParams: state.queryParams,
         headers: state.headers,
         body: state.body,
