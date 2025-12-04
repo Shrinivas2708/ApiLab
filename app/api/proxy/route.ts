@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// 🚀 OPTIMIZATION: Use Node.js runtime for better Buffer performance with large files
 export const runtime = 'nodejs'; 
 
 export async function POST(req: NextRequest) {
   try {
     const { method, url, headers, params, body } = await req.json();
 
-    // Build URL with query params
     const fullUrl = new URL(url);
     if (params) {
       Object.entries(params).forEach(([k, v]) => {
@@ -15,7 +13,6 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // ⏱️ START TIMER (Server Side)
     const startTime = performance.now();
 
     const upstream = await fetch(fullUrl.toString(), {
@@ -26,7 +23,6 @@ export async function POST(req: NextRequest) {
       cache:'no-store'
     });
 
-    // ⏱️ STOP TIMER: Capture pure upstream latency
     const upstreamLatency = Math.round(performance.now() - startTime);
 
     const contentType = upstream.headers.get("content-type") || "";
@@ -37,7 +33,6 @@ export async function POST(req: NextRequest) {
       contentType.includes("application/pdf") ||
       contentType.includes("application/octet-stream");
 
-    // 🚀 OPTIMIZATION: Read directly into Buffer
     const arrayBuffer = await upstream.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
@@ -49,7 +44,7 @@ export async function POST(req: NextRequest) {
       isBinary,
       contentType,
       size: buffer.length,
-      time: upstreamLatency, // Send server-side latency to frontend
+      time: upstreamLatency, 
       data: null as any,
       base64: "",
     };
@@ -59,7 +54,6 @@ export async function POST(req: NextRequest) {
     } else {
       const text = buffer.toString("utf8");
       try {
-        // Try parsing JSON only if content-type suggests it
         if (contentType.includes("json")) {
            responsePayload.data = JSON.parse(text);
         } else {
@@ -69,7 +63,6 @@ export async function POST(req: NextRequest) {
         responsePayload.data = text;
       }
     }
-
     return NextResponse.json(responsePayload);
 
   } catch (err: any) {

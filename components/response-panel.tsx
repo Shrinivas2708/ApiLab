@@ -13,9 +13,17 @@ import { handleDownload } from "@/utils/download";
 import { EyeOff } from "./icons/eye-off";
 
 export default function ResponsePanel() {
-  const { response, loading, error, CORSError, setResponse } = useRequestStore();
+  const store = useRequestStore();
   const [isCopied, setIsCopied] = useState(false);
-  const [previewHtml,setPreviewHtml] = useState(false)
+  const [previewHtml, setPreviewHtml] = useState(false);
+
+  // 1. Get Active Tab Data
+  const activeTab = store.tabs.find((t) => t.id === store.activeTabId);
+  const response = activeTab?.response || null;
+  const loading = activeTab?.loading || false;
+  const error = activeTab?.error || null;
+  const CORSError = activeTab?.CORSError || false;
+
   const { type, formatted, extension } = useMemo(() => {
     if (!response) return { type: "unknown", formatted: "", extension: null };
 
@@ -45,7 +53,7 @@ export default function ResponsePanel() {
     );
   if (CORSError)
     return (
-      <div className="h-full flex flex-col items-center justify-center">
+      <div className="h-full flex flex-col items-center justify-center border-l">
         <svg
           width="90"
           height="90"
@@ -231,7 +239,7 @@ export default function ResponsePanel() {
             onClick={handleCopy}
               />
           }
-          <Eraser className="h-4 w-4 hover:text-foreground cursor-pointer" onClick={() => setResponse(null)}/>
+          <Eraser className="h-4 w-4 hover:text-foreground cursor-pointer" onClick={() => store.setResponse(null)}/>
         </div>
       );
     }
@@ -242,7 +250,7 @@ export default function ResponsePanel() {
             className="h-4 w-4 hover:text-foreground cursor-pointer "
             onClick={() => handleDownload(response)}
           />
-          <Eraser className="h-4 w-4 hover:text-foreground cursor-pointer" onClick={() => setResponse(null)}/>
+          <Eraser className="h-4 w-4 hover:text-foreground cursor-pointer" onClick={() => store.setResponse(null)}/>
         
       </div>
     }
@@ -257,7 +265,7 @@ export default function ResponsePanel() {
             className="h-4 w-4 hover:text-foreground cursor-pointer "
             onClick={() => handleDownload(response)}
           />
-        <Eraser className="h-4 w-4 hover:text-foreground cursor-pointer" onClick={() => setResponse(null)}/>
+        <Eraser className="h-4 w-4 hover:text-foreground cursor-pointer" onClick={() => store.setResponse(null)}/>
         
       </div>
     }
@@ -286,7 +294,9 @@ export default function ResponsePanel() {
           <span
             className={`${statusColor} bg-transparent hover:bg-transparent`}
           >
-            {response.size} B
+            {
+              response.size < 1000 ? (`${response.size} B`) : response.size < 1000000 ? (`${(response.size / 1000).toFixed(2)} KB`) : response.size < 1000000000 ? (`${(response.size / 1000000).toFixed(2)} MB`) : (`${(response.size / 1000000000).toFixed(2)} GB`)
+            }
           </span>
         </div>
       </div>

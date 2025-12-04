@@ -15,6 +15,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Play, Save, X, Globe, Server } from "lucide-react";
 import { KeyValueTable } from "./key-value-table";
 import { Textarea } from "./ui/textarea";
+import { TabBar } from "./tabs/tab-bar";
+
 const HTTP_METHODS = [
   { type: "GET", color: "text-green-500 bg-green-500/10" },
   { type: "POST", color: "text-blue-500 bg-blue-500/10" },
@@ -26,16 +28,29 @@ const HTTP_METHODS = [
 ];
 
 function RequestPanel() {
-  const {
-    url, method, reqMode, queryParams, headers, body, loading,
-    setUrl, setMethod, setReqMode, setQueryParams, setHeaders, setBody,
-    setLoading, setResponse, setError,setCORSError
-  } = useRequestStore();
+  const store = useRequestStore();
+  
+  // Derive the active tab. If no tabs exist (rare), fallback to null.
+  const activeTab = store.tabs.find((t) => t.id === store.activeTabId);
+
+  // Destructure from activeTab if it exists, otherwise use defaults
+  const url = activeTab?.url || "";
+  const method = activeTab?.method || "GET";
+  const reqMode = activeTab?.reqMode || "browser";
+  const queryParams = activeTab?.queryParams || [];
+  const headers = activeTab?.headers || [];
+  const body = activeTab?.body || "";
+  const loading = activeTab?.loading || false;
+
   const abortRef = useRef<AbortController | null>(null);
 
   const handleSend = async () => {
-    setLoading(true);
-    setError(null);
+    if (!activeTab) return;
+
+    store.setLoading(true);
+    store.setError(null);
+    store.setCORSError(false);
+    
     const controller = new AbortController();
     abortRef.current = controller;
     const startTime = performance.now();
@@ -73,13 +88,12 @@ function RequestPanel() {
 
         const responseData = await res.json();
         
-        // Use server-side time if available, otherwise fallback
-        setResponse({
+        store.setResponse({
           ...responseData,
           time: responseData.time || Math.round(performance.now() - startTime)
         });
       } 
-      setCORSError(false)
+      
       if (reqMode === "browser") {
         const full = new URL(url);
         Object.entries(paramObj).forEach(([k, v]) => full.searchParams.set(k, v));
@@ -119,7 +133,7 @@ function RequestPanel() {
           }
         }
 
-        return setResponse({
+        return store.setResponse({
           status: res.status,
           statusText: res.statusText,
           headers: Object.fromEntries(res.headers.entries()),
@@ -134,24 +148,29 @@ function RequestPanel() {
     } catch (err: any) {
       if (err.name === "AbortError") return;
       if (reqMode === "browser" && (err.message === "Failed to fetch" || err.message === "Network Error")) {
-        setCORSError(true)
-        setReqMode("proxy")
+        store.setCORSError(true)
+        store.setReqMode("proxy")
       } else {
-        setCORSError(false)
-        setError(err.message || "Request Failed");
+        store.setCORSError(false)
+        store.setError(err.message || "Request Failed");
       }
     } finally {
-      setLoading(false);
+      store.setLoading(false);
     }
   };
 
   const currentMethodColor = HTTP_METHODS.find((m) => m.type === method)?.color || "";
 
+  if (!activeTab) return <div className="p-4">No Active Tab</div>;
+
   return (
     <div className="flex flex-col h-full min-h-0 bg-background">
-      <div className="block md:flex gap-2 space-y-2 md:space-y-0 p-4 border-b items-center flex-col md:flex-row  ">
+     
+      <TabBar />
+
+      <div className="block md:flex gap-2 space-y-2 md:space-y-0 p-4 border-b items-center flex-col md:flex-row">
         <div className="flex gap-2 md:w-[90%]">
-          <Select value={method} onValueChange={setMethod}>
+          <Select value={method} onValueChange={store.setMethod}>
             <SelectTrigger className={`w-[100px] font-bold ${currentMethodColor}`}>
               <SelectValue placeholder="Method" />
             </SelectTrigger>
@@ -168,12 +187,12 @@ function RequestPanel() {
             className="flex-1 font-mono "
             placeholder="Enter URL"
             value={url}
-            onChange={(e) => setUrl(e.target.value)}
+            onChange={(e) => store.setUrl(e.target.value)}
           />
         </div>
 
         <div className="flex gap-2">
-          <Select value={reqMode} onValueChange={(v: any) => setReqMode(v)}>
+          <Select value={reqMode} onValueChange={(v: any) => store.setReqMode(v)}>
             <SelectTrigger className="w-[110px] text-xs font-medium">
               <SelectValue />
             </SelectTrigger>
@@ -217,16 +236,16 @@ function RequestPanel() {
         </div>
         <div className="flex-1 min-h-0">
           <TabsContent value="params" className="mt-0 h-full tab-fade">
-            <KeyValueTable items={queryParams} setItems={setQueryParams} />
+            <KeyValueTable items={queryParams} setItems={store.setQueryParams} />
           </TabsContent>
           <TabsContent value="headers" className="mt-0 h-full tab-fade">
-            <KeyValueTable items={headers} setItems={setHeaders} />
+            <KeyValueTable items={headers} setItems={store.setHeaders} />
           </TabsContent>
           <TabsContent value="body" className="mt-0 h-full p-4 flex flex-col gap-2 tab-fade">
             <Textarea
               className="flex-1 font-mono text-sm resize-none bg-muted/30"
               value={body}
-              onChange={(e) => setBody(e.target.value)}
+              onChange={(e) => store.setBody(e.target.value)}
             />
           </TabsContent>
           <TabsContent value="auth" className="mt-0 h-full p-10 flex items-center justify-center text-muted-foreground">
