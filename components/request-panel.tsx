@@ -163,10 +163,11 @@ function RequestPanel() {
       if (reqMode === "browser") {
         const full = new URL(url);
         Object.entries(paramObj).forEach(([k, v]) => full.searchParams.set(k, v));
-
+        console.log(Object.keys(headerObj).length ? headerObj : undefined);
+        
         const res = await fetch(full.toString(), {
           method,
-          headers: headerObj,
+          headers: Object.keys(headerObj).length ? headerObj : undefined,
           body: finalBody,
           signal: abortRef.current.signal
         });
@@ -233,7 +234,7 @@ function RequestPanel() {
     <div className="flex flex-col h-full min-h-0 bg-background">
       <TabBar />
 
-      <div className="block md:flex gap-2 space-y-2 md:space-y-0 p-4 border-b items-center flex-col md:flex-row">
+      <div className="block md:flex gap-2 space-y-2 md:space-y-0 p-2  items-center flex-col md:flex-row">
         <div className="flex gap-2 md:w-[90%]">
           <Select value={method} onValueChange={store.setMethod}>
             <SelectTrigger className={`w-[100px] font-bold ${currentMethodColor}`}>
@@ -292,7 +293,7 @@ function RequestPanel() {
 
       <Tabs defaultValue="params" className="flex-1 flex flex-col min-h-0">
         <div className="px-4 border-b">
-          <TabsList className="w-full justify-start bg-transparent h-10 p-0 rounded-full">
+          <TabsList className="w-full justify-start bg-transparent h-9 p-0 rounded-full">
             <TabsTrigger value="params" className="rounded-full data-[state=active]:border-primary tab-underline-transition">Parameters</TabsTrigger>
             <TabsTrigger value="body" className="rounded-full data-[state=active]:border-primary tab-underline-transition">Body</TabsTrigger>
             <TabsTrigger value="headers" className="rounded-full data-[state=active]:border-primary tab-underline-transition">Headers</TabsTrigger>
