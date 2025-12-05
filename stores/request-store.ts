@@ -58,7 +58,8 @@ export type ApiRequestTab = {
   url: string;
   queryParams: KeyValue[];
   headers: KeyValue[];
-  
+  variables: KeyValue[];
+
   bodyType: 'none' | 'json' | 'xml' | 'text' | 'form-data' | 'x-www-form-urlencoded' | 'binary';
   body: string;
   bodyParams: KeyValue[];
@@ -71,6 +72,7 @@ export type ApiRequestTab = {
   error: string | null;
   reqMode: 'proxy' | 'browser';
   CORSError: boolean;
+
 };
 
 type RequestState = {
@@ -101,6 +103,7 @@ type RequestState = {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   setCORSError: (error: boolean) => void;
+  setVariables: (variables: KeyValue[]) => void;
 };
 
 const createNewTab = (): ApiRequestTab => ({
@@ -120,6 +123,7 @@ const createNewTab = (): ApiRequestTab => ({
   loading: false,
   error: null,
   CORSError: false,
+  variables: [{ id: crypto.randomUUID(), key: '', value: '', description: '', enabled: true }]
 });
 
 export const useRequestStore = create<RequestState>()(
@@ -127,7 +131,7 @@ export const useRequestStore = create<RequestState>()(
     (set, get) => ({
       tabs: [createNewTab()],
       activeTabId: null,
-
+setVariables: (variables) => get().updateActiveTab({ variables }),
       addTab: () => {
         const newTab = createNewTab();
         set((state) => ({

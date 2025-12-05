@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
+import { Providers } from "@/components/providers"; // Import the new wrapper
 import Navbar from "@/components/navbar";
 import { Sidebar } from "@/components/sidebar";
 import Footer from "@/components/footer";
@@ -19,8 +19,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "ApiLabs - Open source API Testing Tool",
-  description:
-    "A full-featured API testing platform an open-source alternative to Postman with collections, environments, team collaboration, and mock servers.",
+  description: "A full-featured API testing platform.",
 };
 
 export default function RootLayout({
@@ -30,28 +29,25 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        {/* Use the new Providers component */}
+        <Providers attribute="class" defaultTheme="system" enableSystem>
           <div className="h-screen w-full flex flex-col overflow-hidden">
             <Navbar />
-           
             <div className="flex flex-1 overflow-hidden">
-              <div className=" border-r bg-background h-full hidden md:block ">
+              <div className="border-r bg-background h-full hidden md:block">
                 <Sidebar />
               </div>
-
               <div className="flex-1 overflow-hidden">{children}</div>
             </div>
-            <div className="hidden md:block ">
+            <div className="hidden md:block">
               <Footer />
             </div>
             <div className="block md:hidden">
-              <Sidebar/>
+              <Sidebar />
             </div>
           </div>
-        </ThemeProvider>
+        </Providers>
       </body>
     </html>
   );

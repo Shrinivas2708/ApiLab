@@ -16,6 +16,9 @@ import { KeyValueTable } from "./key-value-table";
 import { TabBar } from "./tabs/tab-bar";
 import ReqBody from "./req-body";
 import AuthPanel from "./auth-panel";
+import { replaceVariables } from "@/utils/variable-replacer";
+import { useSession } from "next-auth/react";
+import { SaveRequestDialog } from "./save-request-dialog";
 
 const HTTP_METHODS = [
   { type: "GET", color: "text-green-500 " },
@@ -28,15 +31,16 @@ const HTTP_METHODS = [
 ];
 
 function RequestPanel() {
+  const { data: session } = useSession();
   const store = useRequestStore();
   const activeTab = store.tabs.find((t) => t.id === store.activeTabId);
-  const url = activeTab?.url || "";
+  const url = replaceVariables(activeTab?.url || "");
   const method = activeTab?.method || "GET";
   const reqMode = activeTab?.reqMode || "browser";
   const queryParams = activeTab?.queryParams || [];
   const headers = activeTab?.headers || [];
   const loading = activeTab?.loading || false;
-
+  const variables = activeTab?.variables || [];
   const abortRef = useRef<AbortController | null>(null);
 
   const handleSend = async () => {
@@ -50,9 +54,11 @@ function RequestPanel() {
 
     try {
       const headerObj = headers.reduce((acc, curr) => {
-        if (curr.enabled && curr.key) acc[curr.key] = curr.value;
-        return acc;
-      }, {} as Record<string, string>);
+    if (curr.enabled && curr.key) {
+        acc[replaceVariables(curr.key)] = replaceVariables(curr.value);
+    }
+    return acc;
+}, {} as Record<string, string>);
 
       const paramObj = queryParams.reduce((acc, curr) => {
         if (curr.enabled && curr.key) acc[curr.key] = curr.value;
@@ -157,7 +163,13 @@ function RequestPanel() {
           time: responseData.time || Math.round(performance.now() - startTime)
         });
       } 
-      
+      const addToHistory = async (method: string, url: string, status: number, time: number) => {
+    if(!session) return;
+    await fetch("/api/history", {
+        method: "POST",
+        body: JSON.stringify({ method, url, status, duration: time })
+    });
+};
       if (reqMode === "browser") {
         const full = new URL(url);
         Object.entries(paramObj).forEach(([k, v]) => full.searchParams.set(k, v));
@@ -172,6 +184,7 @@ function RequestPanel() {
         
         const endTime = performance.now();
         const networkTime = Math.round(endTime - startTime);
+        addToHistory(method, url, res.status, networkTime);
         const contentType = res.headers.get("content-type") || "";
         const isBinary = contentType.includes("image/") || contentType.includes("video/") || contentType.includes("pdf");
 
@@ -283,9 +296,7 @@ function RequestPanel() {
               <Play className="h-4 w-4 mr-1" /> Send
             </Button>
           )}
-          <Button variant="outline" size="icon">
-            <Save className="h-4 w-4" />
-          </Button>
+         <SaveRequestDialog />
         </div>
       </div>
 
@@ -296,6 +307,7 @@ function RequestPanel() {
             <TabsTrigger value="body" className="rounded-full data-[state=active]:border-primary tab-underline-transition">Body</TabsTrigger>
             <TabsTrigger value="headers" className="rounded-full data-[state=active]:border-primary tab-underline-transition">Headers</TabsTrigger>
             <TabsTrigger value="auth" className="rounded-full data-[state=active]:border-primary tab-underline-transition">Authorization</TabsTrigger>
+            <TabsTrigger value="vars" className="rounded-full data-[state=active]:border-primary tab-underline-transition">Variables</TabsTrigger>
             <TabsTrigger value="prereq" className="rounded-full data-[state=active]:border-primary tab-underline-transition">Pre-request Script</TabsTrigger>
             <TabsTrigger value="postreq" className="rounded-full data-[state=active]:border-primary tab-underline-transition">Post-request Script</TabsTrigger>
           </TabsList>
@@ -312,6 +324,14 @@ function RequestPanel() {
           </TabsContent>
           <TabsContent value="auth" className="mt-0 h-full tab-fade">
             <AuthPanel />
+          </TabsContent>
+          <TabsContent value="vars" className="mt-0 h-full tab-fade">
+             <div className="p-2 h-full flex flex-col">
+                <p className="text-xs text-muted-foreground p-2">Request variables (Local to this request)</p>
+                <div className="flex-1 min-h-0">
+                   <KeyValueTable items={variables} setItems={store.setVariables} />
+                </div>
+             </div>
           </TabsContent>
         </div>
       </Tabs>

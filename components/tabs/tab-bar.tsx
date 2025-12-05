@@ -19,6 +19,7 @@ import { useRequestStore } from "@/stores/request-store";
 import { SortableTab } from "./sortable-tab";
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { EnvironmentSelector } from "../environment-selector";
 
 export function TabBar() {
   const { tabs, activeTabId, setActiveTab, reorderTabs, closeTab, addTab, updateTab } =
@@ -94,6 +95,7 @@ export function TabBar() {
         >
           <Plus size={14} />
         </Button>
+        <EnvironmentSelector />
       </div>
     </div>
   );

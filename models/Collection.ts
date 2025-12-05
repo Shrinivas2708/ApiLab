@@ -12,6 +12,7 @@ const RequestItemSchema = new mongoose.Schema({
 const CollectionSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   name: { type: String, required: true },
+  parentId: { type: mongoose.Schema.Types.ObjectId, ref: "Collection", default: null }, // Added for nesting
   requests: [RequestItemSchema],
 }, { timestamps: true });
 
