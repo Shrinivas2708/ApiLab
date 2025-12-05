@@ -11,7 +11,6 @@ import { useMemo, useState } from "react";
 import { Check, Copy, Download, Eraser, Eye } from "lucide-react";
 import { handleDownload } from "@/utils/download";
 import { EyeOff } from "./icons/eye-off";
-import { cn } from "@/lib/utils"; // Assuming you have a cn utility, if not use template literals
 
 type ResponseTab = "data" | "raw" | "headers";
 
@@ -42,7 +41,6 @@ export default function ResponsePanel() {
     return { type: detectedType, formatted: fmt, extension: ext };
   }, [response]);
 
-  // Loading / Error States (Unchanged)
   if (loading)
     return (
       <div className="h-full flex items-center justify-center text-muted-foreground animate-pulse">
@@ -59,7 +57,6 @@ export default function ResponsePanel() {
     );
   if (CORSError)
     return (
-       // ... (Keep existing CORS Error UI)
        <div className="h-full flex flex-col items-center justify-center border-l">
         <p className="text-sm text-muted-foreground">Network Error (CORS)</p>
        </div>
@@ -83,11 +80,9 @@ export default function ResponsePanel() {
     }
   };
 
-  // 2. Logic to render the Headers Tab
   function renderHeaders() {
     if (!response?.headers) return <div className="p-4 text-muted-foreground">No headers found.</div>;
     
-    // Convert headers object to array
     const headerEntries = Object.entries(response.headers);
 
     return (
@@ -112,14 +107,11 @@ export default function ResponsePanel() {
     );
   }
 
-  // 3. Updated Logic for content rendering
   function renderContent() {
-    // A. Headers Tab
     if (activeResponseTab === "headers") {
       return renderHeaders();
     }
 
-    // B. Raw Tab (Forces Code View even for HTML/Images)
     if (activeResponseTab === "raw") {
       return (
         <CodeMirror
@@ -135,7 +127,6 @@ export default function ResponsePanel() {
       );
     }
 
-    // C. Data Tab (Rich Previews)
     if (["json", "xml", "text"].includes(type)) {
       return (
         <CodeMirror
@@ -206,7 +197,6 @@ export default function ResponsePanel() {
   }
 
   function renderOptions() {
-    // Hide options if in Headers view
     if (activeResponseTab === "headers") return null;
 
     if (["json", "xml", "text"].includes(type) || activeResponseTab === "raw") {
@@ -237,7 +227,6 @@ export default function ResponsePanel() {
       );
     }
 
-    // Default media options
     return (
       <div className="flex gap-2">
         <Download className="h-4 w-4 hover:text-foreground cursor-pointer" onClick={() => handleDownload(response)} />
@@ -250,7 +239,6 @@ export default function ResponsePanel() {
 
   return (
     <div className="h-full flex flex-col border-l">
-      {/* Top Status Bar */}
       <div className="flex items-center gap-4 p-3 bg-muted/10 h-12 min-h-12 border-b">
         <Badge variant="outline" className={`${statusColor} border-0`}>
           {response.status} {response.statusText}
@@ -272,10 +260,8 @@ export default function ResponsePanel() {
         </div>
       </div>
 
-      {/* Tabs Section */}
       <div className="text-sm border-b px-2 text-muted-foreground bg-muted/10">
         <ul className="flex gap-1">
-          {/* Helper Component for Tab Item to reduce repetition */}
           {(['data', 'raw', 'headers'] as const).map((tab) => (
             <li
               key={tab}
@@ -292,7 +278,6 @@ export default function ResponsePanel() {
         </ul>
       </div>
 
-      {/* Options Bar */}
       <div className="border-b text-xs px-2 py-1 bg-muted/10 text-muted-foreground flex justify-between items-center h-8">
         <p>
           {activeResponseTab === 'headers' ? 'Response Headers' : `Response Body (${type})`}
@@ -300,7 +285,6 @@ export default function ResponsePanel() {
         <div>{renderOptions()}</div>
       </div>
 
-      {/* Main Content Area */}
       <div className="flex-1 overflow-hidden relative">
         <div className="absolute inset-0 overflow-hidden">
           {renderContent()}
