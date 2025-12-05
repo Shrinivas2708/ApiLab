@@ -215,7 +215,7 @@ export const useRequestStore = create<RequestState>()(
                key: 'Content-Type', 
                value: contentType, 
                description: 'Auto-generated', 
-               enabled: true 
+               enabled: false 
              });
            }
         }

@@ -41,11 +41,9 @@ function RequestPanel() {
 
   const handleSend = async () => {
     if (!activeTab) return;
-
     store.setLoading(true);
     store.setError(null);
     store.setCORSError(false);
-    
     const controller = new AbortController();
     abortRef.current = controller;
     const startTime = performance.now();
