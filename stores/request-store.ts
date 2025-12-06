@@ -10,45 +10,32 @@ export type KeyValue = {
   enabled: boolean;
 };
 
-// Updated Auth Types to match the image
 export type AuthType = 
-  | 'inherit' 
-  | 'none' 
-  | 'basic' 
-  | 'digest' 
-  | 'bearer' 
-  | 'oauth2' 
-  | 'apikey' 
-  | 'aws' 
-  | 'hawk' 
-  | 'jwt';
+  | 'inherit' | 'none' | 'basic' | 'digest' | 'bearer' 
+  | 'oauth2' | 'apikey' | 'aws' | 'hawk' | 'jwt';
 
 export type AuthData = {
   type: AuthType;
-  
-  // Basic / Digest / Hawk
   username?: string;
   password?: string;
-  
-  // Bearer / OAuth2 / JWT
   token?: string;
-  
-  // API Key
   key?: string;
   value?: string;
   addTo?: 'header' | 'query';
-  
-  // AWS Signature
   accessKey?: string;
   secretKey?: string;
   region?: string;
   service?: string;
   sessionToken?: string;
-
-  // Hawk specific
   hawkId?: string;
   hawkKey?: string;
   algorithm?: string;
+};
+
+export type Environment = {
+    _id: string;
+    name: string;
+    variables: KeyValue[];
 };
 
 export type ApiRequestTab = {
@@ -58,7 +45,7 @@ export type ApiRequestTab = {
   url: string;
   queryParams: KeyValue[];
   headers: KeyValue[];
-  variables: KeyValue[];
+  variables: KeyValue[]; // Request-local variables
 
   bodyType: 'none' | 'json' | 'xml' | 'text' | 'form-data' | 'x-www-form-urlencoded' | 'binary';
   body: string;
@@ -66,6 +53,8 @@ export type ApiRequestTab = {
   binaryFile: string | null;
   
   auth: AuthData;
+  preRequestScript: string;
+  postRequestScript: string;
 
   response: any | null;
   loading: boolean;
@@ -73,12 +62,21 @@ export type ApiRequestTab = {
   reqMode: 'proxy' | 'browser';
   CORSError: boolean;
 
+  isDirty: boolean;
+  savedId?: string;      
+  collectionId?: string; 
 };
 
 type RequestState = {
   tabs: ApiRequestTab[];
   activeTabId: string | null;
   
+  // Environment State
+  environments: Environment[];
+  activeEnvId: string | null;
+  globalVariables: KeyValue[]; // Simulated Global Vars for now
+
+  // Actions
   addTab: () => void;
   closeTab: (id: string) => void;
   setActiveTab: (id: string) => void;
@@ -86,24 +84,33 @@ type RequestState = {
   updateTab: (id: string, data: Partial<ApiRequestTab>) => void;
   reorderTabs: (activeId: string, overId: string) => void;
   
+  // Tab Setters
   setMethod: (method: string) => void;
   setUrl: (url: string) => void;
   setReqMode: (mode: 'proxy' | 'browser') => void;
   setQueryParams: (params: KeyValue[]) => void;
   setHeaders: (headers: KeyValue[]) => void;
-  
-  // Body & Header Sync Logic
+  setVariables: (variables: KeyValue[]) => void;
   setBody: (body: string) => void;
   setBodyType: (type: ApiRequestTab['bodyType']) => void;
   setBodyParams: (params: KeyValue[]) => void;
   setBinaryFile: (base64: string | null) => void;
-  
   setAuth: (auth: AuthData) => void;
+  setPreRequestScript: (script: string) => void;
+  setPostRequestScript: (script: string) => void;
   setResponse: (response: any) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   setCORSError: (error: boolean) => void;
-  setVariables: (variables: KeyValue[]) => void;
+  markAsSaved: (savedId: string, collectionId: string, name: string) => void;
+
+  // Environment Actions
+  setEnvironments: (envs: Environment[]) => void;
+  setActiveEnvId: (id: string | null) => void;
+  addEnvironment: (env: Environment) => void;
+  updateEnvironment: (env: Environment) => void;
+  deleteEnvironment: (id: string) => void;
+  setGlobalVariables: (vars: KeyValue[]) => void;
 };
 
 const createNewTab = (): ApiRequestTab => ({
@@ -119,11 +126,14 @@ const createNewTab = (): ApiRequestTab => ({
   bodyParams: [{ id: crypto.randomUUID(), key: '', value: '', description: '', enabled: true }],
   binaryFile: null,
   auth: { type: 'none', addTo: 'header' },
+  preRequestScript: "",
+  postRequestScript: "",
   response: null,
   loading: false,
   error: null,
   CORSError: false,
-  variables: [{ id: crypto.randomUUID(), key: '', value: '', description: '', enabled: true }]
+  variables: [{ id: crypto.randomUUID(), key: '', value: '', description: '', enabled: true }],
+  isDirty: false,
 });
 
 export const useRequestStore = create<RequestState>()(
@@ -131,7 +141,23 @@ export const useRequestStore = create<RequestState>()(
     (set, get) => ({
       tabs: [createNewTab()],
       activeTabId: null,
-setVariables: (variables) => get().updateActiveTab({ variables }),
+      
+      environments: [],
+      activeEnvId: null,
+      globalVariables: [{ id: 'g1', key: 'baseUrl', value: 'http://localhost:3000', enabled: true }],
+
+      setEnvironments: (envs) => set({ environments: envs }),
+      setActiveEnvId: (id) => set({ activeEnvId: id }),
+      addEnvironment: (env) => set((state) => ({ environments: [...state.environments, env], activeEnvId: env._id })),
+      updateEnvironment: (env) => set((state) => ({
+        environments: state.environments.map(e => e._id === env._id ? env : e)
+      })),
+      deleteEnvironment: (id) => set((state) => ({
+        environments: state.environments.filter(e => e._id !== id),
+        activeEnvId: state.activeEnvId === id ? null : state.activeEnvId
+      })),
+      setGlobalVariables: (vars) => set({ globalVariables: vars }),
+
       addTab: () => {
         const newTab = createNewTab();
         set((state) => ({
@@ -181,14 +207,19 @@ setVariables: (variables) => get().updateActiveTab({ variables }),
         });
       },
 
-      setMethod: (method) => get().updateActiveTab({ method }),
-      setUrl: (url) => get().updateActiveTab({ url }),
-      setReqMode: (reqMode) => get().updateActiveTab({ reqMode }),
-      setQueryParams: (queryParams) => get().updateActiveTab({ queryParams }),
-      setHeaders: (headers) => get().updateActiveTab({ headers }),
-      setBody: (body) => get().updateActiveTab({ body }),
-      
-      // AUTO-SYNC HEADER LOGIC
+      setMethod: (method) => get().updateActiveTab({ method, isDirty: true }),
+      setUrl: (url) => get().updateActiveTab({ url, isDirty: true }),
+      setReqMode: (reqMode) => get().updateActiveTab({ reqMode, isDirty: true }),
+      setQueryParams: (queryParams) => get().updateActiveTab({ queryParams, isDirty: true }),
+      setHeaders: (headers) => get().updateActiveTab({ headers, isDirty: true }),
+      setVariables: (variables) => get().updateActiveTab({ variables, isDirty: true }),
+      setBody: (body) => get().updateActiveTab({ body, isDirty: true }),
+      setBodyParams: (bodyParams) => get().updateActiveTab({ bodyParams, isDirty: true }),
+      setBinaryFile: (binaryFile) => get().updateActiveTab({ binaryFile, isDirty: true }),
+      setAuth: (auth) => get().updateActiveTab({ auth, isDirty: true }),
+      setPreRequestScript: (preRequestScript) => get().updateActiveTab({ preRequestScript, isDirty: true }),
+      setPostRequestScript: (postRequestScript) => get().updateActiveTab({ postRequestScript, isDirty: true }),
+
       setBodyType: (bodyType) => {
         const state = get();
         const activeTab = state.tabs.find(t => t.id === state.activeTabId);
@@ -199,16 +230,11 @@ setVariables: (variables) => get().updateActiveTab({ variables }),
         else if (bodyType === 'xml') contentType = 'application/xml';
         else if (bodyType === 'text') contentType = 'text/plain';
         else if (bodyType === 'x-www-form-urlencoded') contentType = 'application/x-www-form-urlencoded';
-        else if (bodyType === 'form-data') contentType = 'multipart/form-data'; // Often auto-handled, but we set strictly for visibility
+        else if (bodyType === 'form-data') contentType = 'multipart/form-data'; 
         else if (bodyType === 'binary') contentType = 'application/octet-stream';
 
         const newHeaders = [...activeTab.headers];
-        
-        // Remove existing Content-Type if switching to none
-        if (bodyType === 'none') {
-           // Optional: You might want to keep it if user added manually, 
-           // but standard behavior is to clean up relevant headers
-        } else if (contentType) {
+        if (contentType) {
            const existing = newHeaders.find(h => h.key.toLowerCase() === 'content-type');
            if (existing) {
              existing.value = contentType;
@@ -223,17 +249,17 @@ setVariables: (variables) => get().updateActiveTab({ variables }),
              });
            }
         }
-        
-        get().updateActiveTab({ bodyType, headers: newHeaders });
+        get().updateActiveTab({ bodyType, headers: newHeaders, isDirty: true });
       },
 
-      setBodyParams: (bodyParams) => get().updateActiveTab({ bodyParams }),
-      setBinaryFile: (binaryFile) => get().updateActiveTab({ binaryFile }),
-      setAuth: (auth) => get().updateActiveTab({ auth }),
       setResponse: (response) => get().updateActiveTab({ response }),
       setLoading: (loading) => get().updateActiveTab({ loading }),
       setError: (error) => get().updateActiveTab({ error }),
       setCORSError: (CORSError) => get().updateActiveTab({ CORSError }),
+
+      markAsSaved: (savedId, collectionId, name) => {
+        get().updateActiveTab({ savedId, collectionId, name, isDirty: false });
+      }
     }),
     {
       name: 'apilab-tabs-store',
@@ -246,28 +272,12 @@ setVariables: (variables) => get().updateActiveTab({ variables }),
           loading: false,
           error: null,
         })),
+        activeEnvId: state.activeEnvId,
+        globalVariables: state.globalVariables,
+        // We generally shouldn't persist environments here if we fetch them from DB, 
+        // but for optimistic UI it's okay for now.
+        environments: state.environments 
       }),
-      migrate: (persistedState: any, version) => {
-        if (version === 0) {
-          // Migrate old state to new structure
-          const newTabs = persistedState.tabs.map((tab: any) => ({
-            ...tab,
-            auth: tab.auth || { type: 'none' },
-            bodyType: tab.bodyType || 'none',
-            body: tab.body || '',
-            bodyParams: tab.bodyParams || [{ id: crypto.randomUUID(), key: '', value: '', description: '', enabled: true }],
-            queryParams: tab.queryParams?.map((q: any) => ({ ...q, description: q.description || '' })) || [],
-            headers: tab.headers?.map((h: any) => ({ ...h, description: h.description || '' })) || [],
-          }));
-          return { ...persistedState, tabs: newTabs };
-        }
-        return persistedState;
-      },
-      onRehydrateStorage: () => (state) => {
-        if (state && state.tabs.length > 0 && !state.activeTabId) {
-            state.activeTabId = state.tabs[0].id;
-        }
-      }
     }
   )
 );

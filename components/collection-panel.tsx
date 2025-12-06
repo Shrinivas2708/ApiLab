@@ -9,10 +9,9 @@ import {
   HelpCircle,
   Download,
   ChevronRight,
-  ChevronDown,
-  FileCode,
   Trash,
-  Play,
+  FileCode,
+  FolderPlus,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -23,6 +22,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { useSession } from "next-auth/react";
 import { useRequestStore } from "@/stores/request-store";
 
@@ -31,14 +37,17 @@ interface CollectionType {
   name: string;
   parentId: string | null;
   requests: any[];
-  children?: CollectionType[]; // For frontend recursion
+  children?: CollectionType[]; 
 }
+
 const buildTree = (items: CollectionType[]) => {
   const dataMap: Record<string, CollectionType> = {};
   const tree: CollectionType[] = [];
 
+  // Initialize
   items.forEach((item) => (dataMap[item._id] = { ...item, children: [] }));
 
+  // Nest
   items.forEach((item) => {
     if (item.parentId && dataMap[item.parentId]) {
       dataMap[item.parentId].children?.push(dataMap[item._id]);
@@ -48,13 +57,18 @@ const buildTree = (items: CollectionType[]) => {
   });
   return tree;
 };
+
 export default function CollectionsPanel() {
   const { data: session } = useSession();
   const [collections, setCollections] = useState<CollectionType[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const { addTab, updateActiveTab } = useRequestStore();
 
-  // Fetch and structure data
+  // Create Folder State
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [targetParentId, setTargetParentId] = useState<string | null>(null);
+
   const fetchData = async () => {
     if (!session) return;
     try {
@@ -70,29 +84,44 @@ export default function CollectionsPanel() {
   };
 
   useEffect(() => {
-    function s(){
+    function RR() {
       fetchData();
     }
-    s()
+    RR()
   }, [session]);
 
-  const createCollection = async (parentId: string | null = null) => {
-    const name = prompt("Enter Name:");
-    if (!name) return;
+  const openCreateDialog = (parentId: string | null = null) => {
+    setTargetParentId(parentId);
+    setNewFolderName("");
+    setCreateDialogOpen(true);
+  };
+
+  const handleCreateFolder = async () => {
+    if (!newFolderName.trim()) return;
 
     await fetch("/api/collections", {
       method: "POST",
-      body: JSON.stringify({ name, parentId, requests: [] }),
+      body: JSON.stringify({ name: newFolderName, parentId: targetParentId, requests: [] }),
     });
+    
+    setCreateDialogOpen(false);
     fetchData();
   };
 
-  const loadRequest = (req: any) => {
+  const loadRequest = (req: any, collectionId: string) => {
     addTab();
-    setTimeout(() => updateActiveTab({ ...req }), 50);
+    setTimeout(() => {
+        updateActiveTab({ 
+            ...req, 
+            savedId: req._id, 
+            collectionId: collectionId,
+            isDirty: false,
+            // Ensure we load variables if they exist in DB, else default
+            variables: req.variables?.map((v: any) => ({...v, id: v.id || crypto.randomUUID()})) || []
+        });
+    }, 50);
   };
 
-  // Login Prompt
   if (!session) {
     return (
       <div className="flex flex-col h-full items-center justify-center p-4 text-center text-muted-foreground gap-2">
@@ -103,7 +132,6 @@ export default function CollectionsPanel() {
 
   return (
     <div className="flex flex-col h-full bg-[#111111] text-foreground border-l border-border/40">
-      {/* 1. Breadcrumb Header */}
       <div className="px-4 py-3 text-xs text-muted-foreground flex items-center gap-1 border-b border-border/40">
         <span className="hover:text-foreground cursor-pointer">
           Personal Workspace
@@ -112,7 +140,6 @@ export default function CollectionsPanel() {
         <span className="text-foreground">Collections</span>
       </div>
 
-      {/* 2. Search Bar */}
       <div className="px-3 py-2">
         <div className="relative">
           <Search className="absolute left-2 top-2.5 h-3 w-3 text-muted-foreground" />
@@ -125,51 +152,62 @@ export default function CollectionsPanel() {
         </div>
       </div>
 
-      {/* 3. Actions Row (New | Help | Import) */}
       <div className="px-3 py-1 flex items-center justify-between">
         <Button
           variant="ghost"
           className="text-xs font-medium hover:bg-muted/20 h-8 gap-2 px-2 text-foreground/90"
-          onClick={() => createCollection(null)}
+          onClick={() => openCreateDialog(null)}
         >
           <Plus size={14} /> New
         </Button>
         <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 text-muted-foreground hover:text-foreground"
-          >
+          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground">
             <HelpCircle size={14} />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 text-muted-foreground hover:text-foreground"
-          >
+          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground">
             <Download size={14} />
           </Button>
         </div>
       </div>
 
-      {/* 4. Recursive Folder Tree */}
       <ScrollArea className="flex-1">
         <div className="p-2 space-y-0.5">
           {collections.map((col) => (
             <CollectionItem
               key={col._id}
               item={col}
-              onCreateSub={createCollection}
+              onCreateSub={openCreateDialog}
               onLoadReq={loadRequest}
             />
           ))}
         </div>
       </ScrollArea>
+
+      {/* Create Folder Dialog */}
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Create New Folder</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Input 
+                value={newFolderName} 
+                onChange={(e) => setNewFolderName(e.target.value)}
+                placeholder="Folder Name" 
+                onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
+                autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleCreateFolder}>Create</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
-// Recursive Component
 function CollectionItem({ item, onCreateSub, onLoadReq }: any) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -207,7 +245,7 @@ function CollectionItem({ item, onCreateSub, onLoadReq }: any) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40">
             <DropdownMenuItem onClick={() => onCreateSub(item._id)}>
-              <Plus size={12} className="mr-2" /> New Folder
+              <FolderPlus size={12} className="mr-2" /> New Folder
             </DropdownMenuItem>
             <DropdownMenuItem>
               <FileCode size={12} className="mr-2" /> New Request
@@ -219,10 +257,8 @@ function CollectionItem({ item, onCreateSub, onLoadReq }: any) {
         </DropdownMenu>
       </div>
 
-      {/* Children (Requests & Subfolders) */}
       {isOpen && (
         <div className="ml-2 border-l border-border/30 pl-1 mt-1">
-          {/* Render Nested Collections */}
           {item.children?.map((child: any) => (
             <CollectionItem
               key={child._id}
@@ -232,11 +268,10 @@ function CollectionItem({ item, onCreateSub, onLoadReq }: any) {
             />
           ))}
 
-          {/* Render Requests in this Collection */}
           {item.requests?.map((req: any, i: number) => (
             <div
               key={i}
-              onClick={() => onLoadReq(req)}
+              onClick={() => onLoadReq(req, item._id)}
               className="flex items-center gap-2 py-1.5 px-6 rounded-md hover:bg-muted/20 cursor-pointer group"
             >
               <span

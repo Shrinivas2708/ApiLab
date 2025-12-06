@@ -2,9 +2,10 @@
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { X } from "lucide-react";
+import { X, Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect, useRef } from "react";
+import { useRequestStore } from "@/stores/request-store";
 
 interface SortableTabProps {
   id: string;
@@ -53,18 +54,19 @@ export function SortableTab({
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(name);
   const inputRef = useRef<HTMLInputElement>(null);
+  
+  // Get dirty state from store
+  const isDirty = useRequestStore(state => state.tabs.find(t => t.id === id)?.isDirty);
 
-  // Sync local state with prop when not editing
   useEffect(() => {
-    async function RR(){
       if (!isEditing) {
-      setEditedName(name);
+      function ss(){
+        setEditedName(name);
+      }
+      ss()
     }
-    }
-    RR()
   }, [name, isEditing]);
 
-  // Auto-focus input when editing starts
   useEffect(() => {
     if (isEditing && inputRef.current) {
       inputRef.current.focus();
@@ -81,7 +83,6 @@ export function SortableTab({
     if (onRename && editedName.trim() !== "") {
       onRename(id, editedName);
     } else {
-      // Revert if empty
       setEditedName(name);
     }
   };
@@ -91,7 +92,7 @@ export function SortableTab({
       handleBlur();
     } else if (e.key === "Escape") {
       setIsEditing(false);
-      setEditedName(name); // Revert
+      setEditedName(name); 
     }
   };
 
@@ -128,8 +129,8 @@ export function SortableTab({
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
           className="flex-1 bg-transparent outline-none min-w-0 w-full"
-          onClick={(e) => e.stopPropagation()} // Prevent drag/click when editing
-          onMouseDown={(e) => e.stopPropagation()} // Prevent drag start on input
+          onClick={(e) => e.stopPropagation()} 
+          onMouseDown={(e) => e.stopPropagation()} 
         />
       ) : (
         <span className="truncate flex-1 font-mono text-[11px]">
@@ -137,16 +138,22 @@ export function SortableTab({
         </span>
       )}
 
-      {/* Close Button */}
-      <div
-        role="button"
-        onClick={(e) => onClose(id, e)}
-        className={cn(
-          "rounded-sm opacity-0 group-hover:opacity-100 hover:bg-accent hover:text-destructive p-0.5 transition-all ml-1",
-          isActive && "opacity-100" 
+      {/* Dirty Indicator / Close Button */}
+      <div className="w-4 h-4 flex items-center justify-center ml-1">
+        {isDirty && !isDragging && (
+           <div className="w-2 h-2 rounded-full bg-orange-500 group-hover:hidden transition-all" />
         )}
-      >
-        <X size={12} />
+        
+        <div
+            role="button"
+            onClick={(e) => onClose(id, e)}
+            className={cn(
+            "rounded-sm opacity-0 group-hover:opacity-100 hover:bg-accent hover:text-destructive p-0.5 transition-all absolute",
+            isActive && !isDirty && "opacity-100" 
+            )}
+        >
+            <X size={12} />
+        </div>
       </div>
     </div>
   );

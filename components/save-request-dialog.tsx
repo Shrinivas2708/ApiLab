@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Folder, Save, Check, Loader2, ChevronRight } from "lucide-react";
+import { Folder, Save, Check, Loader2 } from "lucide-react";
 import { useRequestStore } from "@/stores/request-store";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -15,17 +15,20 @@ interface Collection {
   children?: Collection[];
 }
 
-export function SaveRequestDialog() {
-  const [open, setOpen] = useState(false);
+interface SaveDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function SaveRequestDialog({ open, onOpenChange }: SaveDialogProps) {
   const [name, setName] = useState("");
   const [selectedColId, setSelectedColId] = useState<string | null>(null);
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(false);
   
-  const { tabs, activeTabId } = useRequestStore();
+  const { tabs, activeTabId, markAsSaved } = useRequestStore();
   const activeTab = tabs.find(t => t.id === activeTabId);
 
-  // Initial Name from Tab
   useEffect(() => {
     if (activeTab && open) {
       setName(activeTab.name || "Untitled Request");
@@ -38,7 +41,6 @@ export function SaveRequestDialog() {
       const res = await fetch("/api/collections");
       if (res.ok) {
         const data = await res.json();
-        // Simple tree builder
         const map: any = {};
         const tree: any[] = [];
         data.forEach((c: any) => map[c._id] = { ...c, children: [] });
@@ -76,8 +78,12 @@ export function SaveRequestDialog() {
 
       if (!res.ok) throw new Error("Failed to save");
       
-      setOpen(false);
-      alert("Saved successfully!"); // Or use a toast here
+      const savedData = await res.json();
+      
+      // Update Store with new ID and CollectionID, mark as Saved
+      markAsSaved(savedData._id, selectedColId, name);
+
+      onOpenChange(false);
     } catch (err) {
       console.error(err);
       alert("Error saving request");
@@ -86,7 +92,6 @@ export function SaveRequestDialog() {
     }
   };
 
-  // Recursive Folder Selector Item
   const FolderItem = ({ col, depth = 0 }: { col: Collection, depth?: number }) => (
     <div className="select-none">
       <div 
@@ -106,12 +111,7 @@ export function SaveRequestDialog() {
   );
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="icon">
-          <Save className="h-4 w-4" />
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Save Request</DialogTitle>
@@ -137,7 +137,7 @@ export function SaveRequestDialog() {
 
           <Button onClick={handleSave} disabled={loading || !selectedColId} className="w-full">
             {loading ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}
-            Save to Collection
+            Save
           </Button>
         </div>
       </DialogContent>

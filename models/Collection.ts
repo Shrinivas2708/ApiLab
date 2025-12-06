@@ -1,5 +1,12 @@
 import mongoose from "mongoose";
 
+const VariableSchema = new mongoose.Schema({
+  id: String,
+  key: String,
+  value: String,
+  enabled: Boolean
+}, { _id: false });
+
 const RequestItemSchema = new mongoose.Schema({
   name: { type: String, required: true },
   method: { type: String, default: "GET" },
@@ -7,12 +14,17 @@ const RequestItemSchema = new mongoose.Schema({
   headers: { type: Array, default: [] },
   body: { type: String },
   bodyType: { type: String, default: "none" },
+  auth: { type: Object },
+  params: { type: Array, default: [] },
+  preRequestScript: { type: String },
+  postRequestScript: { type: String },
+  variables: [VariableSchema] // <--- Added this to save local variables
 });
 
 const CollectionSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   name: { type: String, required: true },
-  parentId: { type: mongoose.Schema.Types.ObjectId, ref: "Collection", default: null }, // Added for nesting
+  parentId: { type: mongoose.Schema.Types.ObjectId, ref: "Collection", default: null },
   requests: [RequestItemSchema],
 }, { timestamps: true });
 
