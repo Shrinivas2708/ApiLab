@@ -38,6 +38,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "graphql": "^16.12.0",
     "json-colorizer": "^3.0.1",
     "lucide-react": "^0.555.0",
     "mongoose": "^9.0.1",

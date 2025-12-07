@@ -2,7 +2,7 @@
 
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { GraphqlUrlBar } from "./url-bar";
-import { GraphqlRequestEditor } from "./request-editor";
+import { GraphqlRequestEditor } from "./graphql-request-panel";
 import { GraphqlRightSidebar } from "./graphql-sidebar";
 import { GraphqlResponsePane } from "./response-pane"; // Reusing previous logic
 

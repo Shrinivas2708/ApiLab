@@ -12,6 +12,15 @@ import { Check, Copy, Download, Eraser, Eye } from "lucide-react";
 import { handleDownload } from "@/utils/download";
 import { EyeOff } from "./icons/eye-off";
 
+const transparentBg = EditorView.theme({
+  "&": {
+    backgroundColor: "transparent !important"
+  },
+  ".cm-scroller": {
+    backgroundColor: "transparent !important"
+  }
+});
+
 type ResponseTab = "data" | "raw" | "headers";
 
 export default function ResponsePanel() {

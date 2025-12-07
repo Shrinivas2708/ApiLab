@@ -1,51 +1,51 @@
 "use client";
-import { useGraphqlStore } from "./store";
+import { useGraphqlStore } from "@/stores/graphql-store";
 import { Book, Box, Folder } from "lucide-react";
 import { cn } from "@/lib/utils";
-import GraphQlCollectionTree from "./graphql-collection-panel";
 import DocsExplorer from "./graphql-docs";
+import GraphQlCollectionPanel from "./graphql-collection-panel";
+import GraphqlSchemaView from "./graphql-schema-view"; // Import the new view
+
 export function GraphqlRightSidebar() {
   const { activeRightSidebar, setActiveRightSidebar } = useGraphqlStore();
 
   const renderContent = () => {
     switch (activeRightSidebar) {
         case 'docs': return <DocsExplorer />;
-        case 'schema': return <div className="p-4 text-sm text-muted-foreground">Schema SDL View (Coming Soon)</div>;
-        case 'collections': return <GraphQlCollectionTree /> ;
+        case 'schema': return <GraphqlSchemaView />; // Use the new component
+        case 'collections': return <GraphQlCollectionPanel />;
         default: return null;
     }
   };
 
   return (
-    <div className="flex h-full  bg-muted/10">
-      <div className="w-12 flex flex-col border-x items-center py-4 gap-4 bg-muted/10">
+    <div className="flex h-full bg-background border-l">
+      {/* Icon Strip */}
+      <div className="w-12 flex flex-col items-center py-4 gap-4 border-r bg-muted/5">
         <NavIcon 
-            icon={Book} 
-            active={activeRightSidebar === 'docs'} 
-            onClick={() => setActiveRightSidebar(activeRightSidebar === 'docs' ? null : 'docs')} 
-            label="Documentation"
+            icon={Folder} 
+            active={activeRightSidebar === 'collections'} 
+            onClick={() => setActiveRightSidebar('collections')} 
+            label="Collections"
         />
         <NavIcon 
             icon={Box} 
             active={activeRightSidebar === 'schema'} 
-            onClick={() => setActiveRightSidebar(activeRightSidebar === 'schema' ? null : 'schema')} 
+            onClick={() => setActiveRightSidebar('schema')} 
             label="Schema"
         />
         <NavIcon 
-            icon={Folder} 
-            active={activeRightSidebar === 'collections'} 
-            onClick={() => setActiveRightSidebar(activeRightSidebar === 'collections' ? null : 'collections')} 
-            label="Collections"
+            icon={Book} 
+            active={activeRightSidebar === 'docs'} 
+            onClick={() => setActiveRightSidebar('docs')} 
+            label="Documentation"
         />
-       
       </div>
-      {activeRightSidebar && (
-        <div className="w-full flex flex-col h-full bg-muted/10">
-            {renderContent()}
-        </div>
-      )}
 
-      
+      {/* Content Area */}
+      <div className="flex-1 min-w-0 flex flex-col h-full bg-background overflow-hidden">
+          {renderContent()}
+      </div>
     </div>
   );
 }
@@ -57,7 +57,7 @@ function NavIcon({ icon: Icon, active, onClick, label }: any) {
             title={label}
             className={cn(
                 "p-2 rounded-md transition-all",
-                active ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground"
+                active ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
             )}
         >
             <Icon size={20} />

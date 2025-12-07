@@ -18,7 +18,8 @@ const RequestItemSchema = new mongoose.Schema({
   params: { type: Array, default: [] },
   preRequestScript: { type: String },
   postRequestScript: { type: String },
-  variables: [VariableSchema] // <--- Added this to save local variables
+  variables: [VariableSchema],
+  
 });
 
 const CollectionSchema = new mongoose.Schema({
