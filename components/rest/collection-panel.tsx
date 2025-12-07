@@ -65,7 +65,7 @@ export default function CollectionsPanel() {
   >("collections");
 
   return (
-    <div className="flex h-full w-full bg-[#111111] text-foreground border-l border-border/40">
+    <div className="flex h-full w-full  text-foreground border-l border-border/40">
       {/* 1. Left Icon Strip */}
       <div className="w-10 flex flex-col items-center py-4 border-r border-border/40 gap-4 bg-muted/5">
         <button

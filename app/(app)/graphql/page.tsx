@@ -12,7 +12,7 @@ export default function GraphQLPage() {
     <div className="flex flex-col h-full bg-background">
       <GraphqlTabs />
       <GraphqlUrlBar />
-      
+
       <div className="flex-1 overflow-hidden">
         <PanelGroup direction="horizontal" className="h-full">
           <Panel minSize={60}>
@@ -28,7 +28,12 @@ export default function GraphQLPage() {
           </Panel>
           <PanelResizeHandle className="w-px bg-border hover:bg-primary/50 transition-colors" />
 
-          <Panel minSize={20} maxSize={30} defaultSize={20} className="hidden md:block">
+          <Panel
+            minSize={20}
+            maxSize={30}
+            defaultSize={20}
+            className="hidden md:block"
+          >
             <GraphqlRightSidebar />
           </Panel>
         </PanelGroup>
