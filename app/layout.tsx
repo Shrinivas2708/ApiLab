@@ -1,11 +1,7 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Providers } from "@/components/providers"; // Import the new wrapper
-import Navbar from "@/components/navbar";
-import { Sidebar } from "@/components/sidebar";
-import Footer from "@/components/footer";
-import React from "react";
+import { Geist, Geist_Mono } from "next/font/google";
+import { Providers } from "@/components/providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,24 +25,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {/* Use the new Providers component */}
+      <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <Providers attribute="class" defaultTheme="system" enableSystem>
-          <div className="h-screen w-full flex flex-col overflow-hidden">
-            <Navbar />
-            <div className="flex flex-1 overflow-hidden">
-              <div className="border-r bg-background h-full hidden md:block">
-                <Sidebar />
-              </div>
-              <div className="flex-1 overflow-hidden">{children}</div>
-            </div>
-            <div className="hidden md:block">
-              <Footer />
-            </div>
-            <div className="block md:hidden">
-              <Sidebar />
-            </div>
-          </div>
+          {children}
         </Providers>
       </body>
     </html>
