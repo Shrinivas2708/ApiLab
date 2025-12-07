@@ -59,6 +59,7 @@ export default function ResponsePanel() {
     return (
        <div className="h-full flex flex-col items-center justify-center border-l">
         <p className="text-sm text-muted-foreground">Network Error (CORS)</p>
+        <p className="text-sm text-muted-foreground">Switching to proxy</p>
        </div>
     );
 

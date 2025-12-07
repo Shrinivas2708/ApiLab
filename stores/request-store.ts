@@ -117,7 +117,7 @@ const createNewTab = (): ApiRequestTab => ({
   id: crypto.randomUUID(),
   name: 'Untitled Request',
   method: 'GET',
-  url: 'https://echo.hoppscotch.io',
+  url: 'https://apilabs.shriii.xyz/api/echo',
   reqMode: 'browser',
   queryParams: [{ id: crypto.randomUUID(), key: '', value: '', description: '', enabled: true }],
   headers: [{ id: crypto.randomUUID(), key: '', value: '', description: '', enabled: true }],
@@ -150,7 +150,8 @@ export const useRequestStore = create<RequestState>()(
       setActiveEnvId: (id) => set({ activeEnvId: id }),
       addEnvironment: (env) => set((state) => ({ environments: [...state.environments, env], activeEnvId: env._id })),
       updateEnvironment: (env) => set((state) => ({
-        environments: state.environments.map(e => e._id === env._id ? env : e)
+        environments: state.environments.map(e => e._id === env._id ? env : e),
+        ...(state.activeEnvId === env._id ? { /* trigger re-render if needed */ } : {})
       })),
       deleteEnvironment: (id) => set((state) => ({
         environments: state.environments.filter(e => e._id !== id),

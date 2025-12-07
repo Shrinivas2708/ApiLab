@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const VariableSchema = new mongoose.Schema({
   id: { type: String, required: true },
-  key: { type: String, required: true },
+  key: { type: String, default: "" }, 
   value: { type: String, default: "" },
   enabled: { type: Boolean, default: true }
 }, { _id: false });

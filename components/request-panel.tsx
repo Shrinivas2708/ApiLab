@@ -302,11 +302,18 @@ const activeEnv = store.environments.find(e => e._id === store.activeEnvId);
           time: resTime,
       });
 
-      if(session) {
+      if (session) {
         await fetch("/api/history", {
             method: "POST",
             body: JSON.stringify({ method, url, status: resStatus, duration: resTime })
         });
+      } else {
+        const newItem = {
+            method, url, status: resStatus, duration: resTime, date: new Date().toISOString()
+        };
+        const existing = JSON.parse(localStorage.getItem("apilab_history") || "[]");
+        const updated = [newItem, ...existing].slice(0, 50);
+        localStorage.setItem("apilab_history", JSON.stringify(updated));
       }
 
     } catch (err: any) {

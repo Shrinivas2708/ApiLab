@@ -121,3 +121,30 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
+
+export async function DELETE(req: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get('id');
+
+    if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
+
+    await connectDB();
+    const userId = (session.user as any).id;
+
+    // Delete the collection/folder itself
+    await Collection.findOneAndDelete({ _id: id, userId });
+
+    // Optional: Cascade delete children (Simple version: just delete items where parentId matches)
+    // For a robust system, you might want a recursive function, but this handles 1 level deep
+    await Collection.deleteMany({ parentId: id, userId });
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}

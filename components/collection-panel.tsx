@@ -6,12 +6,14 @@ import {
   Plus,
   MoreVertical,
   Search,
-  HelpCircle,
-  Download,
   ChevronRight,
   Trash,
   FileCode,
   FolderPlus,
+  FolderTree,
+  History,
+  Clock,
+  CodeIcon,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -31,23 +33,22 @@ import {
 } from "@/components/ui/dialog";
 import { useSession } from "next-auth/react";
 import { useRequestStore } from "@/stores/request-store";
+import { cn } from "@/lib/utils";
+import { HistoryPanel } from "./history-panel";
+import { CodeSnippet } from "./code-snippet";
 
 interface CollectionType {
   _id: string;
   name: string;
   parentId: string | null;
   requests: any[];
-  children?: CollectionType[]; 
+  children?: CollectionType[];
 }
 
 const buildTree = (items: CollectionType[]) => {
   const dataMap: Record<string, CollectionType> = {};
   const tree: CollectionType[] = [];
-
-  // Initialize
   items.forEach((item) => (dataMap[item._id] = { ...item, children: [] }));
-
-  // Nest
   items.forEach((item) => {
     if (item.parentId && dataMap[item.parentId]) {
       dataMap[item.parentId].children?.push(dataMap[item._id]);
@@ -59,12 +60,65 @@ const buildTree = (items: CollectionType[]) => {
 };
 
 export default function CollectionsPanel() {
+  const [activeView, setActiveView] = useState<"collections" | "history" | "code">(
+    "collections"
+  );
+
+  return (
+    <div className="flex h-full w-full bg-[#111111] text-foreground border-l border-border/40">
+      {/* 1. Left Icon Strip */}
+      <div className="w-10 flex flex-col items-center py-4 border-r border-border/40 gap-4 bg-muted/5">
+        <button
+          onClick={() => setActiveView("collections")}
+          className={cn(
+            "p-2 rounded-md transition-all",
+            activeView === "collections"
+              ? "bg-primary/20 text-primary"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+          title="Collections"
+        >
+          <FolderTree size={18} />
+        </button>
+        <button
+          onClick={() => setActiveView("history")}
+          className={cn(
+            "p-2 rounded-md transition-all",
+            activeView === "history"
+              ? "bg-primary/20 text-primary"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+          title="History"
+        >
+          <History size={18} />
+        </button>
+        <button
+          onClick={() => setActiveView("code")}
+          className={cn(
+            "p-2 rounded-md transition-all",
+            activeView === "code"
+              ? "bg-primary/20 text-primary"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+          title="Code Snippet"
+        >
+          <CodeIcon size={18} />
+        </button>
+      </div>
+
+      <div className="flex-1 flex flex-col min-w-0">
+        {activeView === "collections" ? <CollectionTree /> : activeView === "history" ? <HistoryPanel /> : <CodeSnippet />}
+      </div>
+    </div>
+  );
+}
+
+function CollectionTree() {
   const { data: session } = useSession();
   const [collections, setCollections] = useState<CollectionType[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const { addTab, updateActiveTab } = useRequestStore();
 
-  // Create Folder State
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [targetParentId, setTargetParentId] = useState<string | null>(null);
@@ -84,10 +138,10 @@ export default function CollectionsPanel() {
   };
 
   useEffect(() => {
-    function RR() {
+    function load(){
       fetchData();
     }
-    RR()
+    load()
   }, [session]);
 
   const openCreateDialog = (parentId: string | null = null) => {
@@ -98,49 +152,68 @@ export default function CollectionsPanel() {
 
   const handleCreateFolder = async () => {
     if (!newFolderName.trim()) return;
-
     await fetch("/api/collections", {
       method: "POST",
-      body: JSON.stringify({ name: newFolderName, parentId: targetParentId, requests: [] }),
+      body: JSON.stringify({
+        name: newFolderName,
+        parentId: targetParentId,
+        requests: [],
+      }),
     });
-    
     setCreateDialogOpen(false);
+    fetchData();
+  };
+
+  const handleDeleteCollection = async (id: string) => {
+    if (
+      !confirm(
+        "Are you sure? This will delete the folder and all requests inside."
+      )
+    )
+      return;
+    await fetch(`/api/collections?id=${id}`, { method: "DELETE" });
     fetchData();
   };
 
   const loadRequest = (req: any, collectionId: string) => {
     addTab();
     setTimeout(() => {
-        updateActiveTab({ 
-            ...req, 
-            savedId: req._id, 
-            collectionId: collectionId,
-            isDirty: false,
-            // Ensure we load variables if they exist in DB, else default
-            variables: req.variables?.map((v: any) => ({...v, id: v.id || crypto.randomUUID()})) || []
-        });
+      updateActiveTab({
+        ...req,
+        savedId: req._id,
+        collectionId: collectionId,
+        isDirty: false,
+        variables:
+          req.variables?.map((v: any) => ({
+            ...v,
+            id: v.id || crypto.randomUUID(),
+          })) || [],
+      });
     }, 50);
   };
 
-  if (!session) {
+  if (!session)
     return (
       <div className="flex flex-col h-full items-center justify-center p-4 text-center text-muted-foreground gap-2">
         <p>Please Login to view Collections</p>
       </div>
     );
-  }
 
   return (
-    <div className="flex flex-col h-full bg-[#111111] text-foreground border-l border-border/40">
-      <div className="px-4 py-3 text-xs text-muted-foreground flex items-center gap-1 border-b border-border/40">
-        <span className="hover:text-foreground cursor-pointer">
-          Personal Workspace
-        </span>
-        <ChevronRight size={10} />
-        <span className="text-foreground">Collections</span>
+    <div className="flex flex-col h-full">
+      <div className="px-4 py-3 text-xs text-muted-foreground flex items-center justify-between border-b border-border/40">
+        <span className="font-semibold text-foreground">Collections</span>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6"
+          onClick={() => openCreateDialog(null)}
+        >
+          <Plus size={14} />
+        </Button>
       </div>
 
-      <div className="px-3 py-2">
+      <div className="px-2 py-2">
         <div className="relative">
           <Search className="absolute left-2 top-2.5 h-3 w-3 text-muted-foreground" />
           <Input
@@ -152,54 +225,41 @@ export default function CollectionsPanel() {
         </div>
       </div>
 
-      <div className="px-3 py-1 flex items-center justify-between">
-        <Button
-          variant="ghost"
-          className="text-xs font-medium hover:bg-muted/20 h-8 gap-2 px-2 text-foreground/90"
-          onClick={() => openCreateDialog(null)}
-        >
-          <Plus size={14} /> New
-        </Button>
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground">
-            <HelpCircle size={14} />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground">
-            <Download size={14} />
-          </Button>
-        </div>
-      </div>
-
       <ScrollArea className="flex-1">
-        <div className="p-2 space-y-0.5">
+        <div className="p-1 space-y-0.5">
           {collections.map((col) => (
             <CollectionItem
               key={col._id}
               item={col}
               onCreateSub={openCreateDialog}
               onLoadReq={loadRequest}
+              onDelete={handleDeleteCollection}
             />
           ))}
         </div>
       </ScrollArea>
 
-      {/* Create Folder Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Create New Folder</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <Input 
-                value={newFolderName} 
-                onChange={(e) => setNewFolderName(e.target.value)}
-                placeholder="Folder Name" 
-                onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
-                autoFocus
+            <Input
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              placeholder="Folder Name"
+              onKeyDown={(e) => e.key === "Enter" && handleCreateFolder()}
+              autoFocus
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>Cancel</Button>
+            <Button
+              variant="outline"
+              onClick={() => setCreateDialogOpen(false)}
+            >
+              Cancel
+            </Button>
             <Button onClick={handleCreateFolder}>Create</Button>
           </DialogFooter>
         </DialogContent>
@@ -208,7 +268,7 @@ export default function CollectionsPanel() {
   );
 }
 
-function CollectionItem({ item, onCreateSub, onLoadReq }: any) {
+function CollectionItem({ item, onCreateSub, onLoadReq, onDelete }: any) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -247,10 +307,10 @@ function CollectionItem({ item, onCreateSub, onLoadReq }: any) {
             <DropdownMenuItem onClick={() => onCreateSub(item._id)}>
               <FolderPlus size={12} className="mr-2" /> New Folder
             </DropdownMenuItem>
-            <DropdownMenuItem>
-              <FileCode size={12} className="mr-2" /> New Request
-            </DropdownMenuItem>
-            <DropdownMenuItem className="text-red-500 focus:text-red-500">
+            <DropdownMenuItem
+              className="text-red-500 focus:text-red-500"
+              onClick={() => onDelete(item._id)}
+            >
               <Trash size={12} className="mr-2" /> Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -265,9 +325,9 @@ function CollectionItem({ item, onCreateSub, onLoadReq }: any) {
               item={child}
               onCreateSub={onCreateSub}
               onLoadReq={onLoadReq}
+              onDelete={onDelete}
             />
           ))}
-
           {item.requests?.map((req: any, i: number) => (
             <div
               key={i}
@@ -292,7 +352,6 @@ function CollectionItem({ item, onCreateSub, onLoadReq }: any) {
               </span>
             </div>
           ))}
-
           {!item.children?.length && !item.requests?.length && (
             <div className="py-2 text-[10px] text-muted-foreground/50 text-center">
               Empty Folder
