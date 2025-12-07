@@ -31,17 +31,14 @@ export function SaveGraphqlDialog({ open, onOpenChange }: { open: boolean, onOpe
 
   const fetchCollections = async () => {
     if (session) {
-        // Fetch from API
         try {
-            const res = await fetch("/api/collections");
+            const res = await fetch("/api/collections?type=GRAPHQL");
             if (res.ok) {
                 const data = await res.json();
-                // Simple transformation for flat list to tree if needed, or just flat for now
                 setCollections(data); 
             }
         } catch (e) { console.error(e); }
     } else {
-        // Fetch from Local Store
         setCollections(store.localCollections);
     }
   };
@@ -59,7 +56,7 @@ export function SaveGraphqlDialog({ open, onOpenChange }: { open: boolean, onOpe
       if (session) {
           await fetch("/api/collections", {
               method: "POST",
-              body: JSON.stringify({ name: newColName, parentId: null })
+              body: JSON.stringify({ name: newColName, parentId: null, type: "GRAPHQL" })
           });
       } else {
           store.createLocalCollection(newColName);

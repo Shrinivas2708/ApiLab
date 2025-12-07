@@ -3,10 +3,9 @@
 import { useGraphqlStore } from "@/stores/graphql-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Play, Zap, Save, Globe, Server, AlertTriangle } from "lucide-react";
+import { Play, Zap, Save} from "lucide-react";
 import { useState } from "react";
-import { SaveGraphqlDialog } from "./save-graphql-dialog"; // We will create this
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SaveGraphqlDialog } from "./save-graphql-dialog"; 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 export function GraphqlUrlBar() {
@@ -22,13 +21,11 @@ export function GraphqlUrlBar() {
 
   const handleConnectClick = () => {
     if (store.connectedEndpoint && !isConnectedToCurrent) {
-        // Warn before switching
+      
         setWarnDialogOpen(true);
     } else if (isConnectedToCurrent) {
-        // Already connected, so Disconnect
         store.disconnect();
     } else {
-        // Connect
         store.connect(activeTab.url);
     }
   };
@@ -43,9 +40,6 @@ export function GraphqlUrlBar() {
     <>
     <div className="flex items-center gap-2 p-2 border-b bg-muted/10 shrink-0">
       <div className="flex-1 flex gap-0 rounded-md border bg-background items-center overflow-hidden focus-within:ring-1 focus-within:ring-primary shadow-sm">
-        <div className="bg-muted px-3 py-1.5 border-r text-xs font-bold text-muted-foreground select-none">
-            POST
-        </div>
         <Input 
             value={activeTab.url}
             onChange={(e) => store.updateActiveTab({ url: e.target.value })}
@@ -77,7 +71,6 @@ export function GraphqlUrlBar() {
       </Button>
     </div>
 
-    {/* Switch Connection Warning Dialog */}
     <Dialog open={warnDialogOpen} onOpenChange={setWarnDialogOpen}>
         <DialogContent className="sm:max-w-md">
             <DialogHeader>

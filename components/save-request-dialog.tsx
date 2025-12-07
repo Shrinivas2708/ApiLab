@@ -38,7 +38,7 @@ export function SaveRequestDialog({ open, onOpenChange }: SaveDialogProps) {
 
   const fetchCollections = async () => {
     try {
-      const res = await fetch("/api/collections");
+      const res = await fetch("/api/collections?type=REST");
       if (res.ok) {
         const data = await res.json();
         const map: any = {};

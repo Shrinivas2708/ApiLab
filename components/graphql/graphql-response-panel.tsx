@@ -50,7 +50,9 @@ export function GraphqlResponsePane() {
           </span>
         </div>
       </div>
-      <div className="flex-1 relative ">
+   
+      <div className="flex-1 overflow-hidden relative">
+        <div className="absolute inset-0 overflow-hidden">
         <CodeMirror
           value={response}
           height="100%"
@@ -60,6 +62,7 @@ export function GraphqlResponsePane() {
           className="h-full text-sm"
           style={{ backgroundColor: 'transparent' }}
         />
+      </div>
       </div>
     </div>
   );

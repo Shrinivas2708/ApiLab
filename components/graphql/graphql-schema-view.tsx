@@ -5,7 +5,6 @@ import { useMemo } from "react";
 import CodeMirror, { EditorView } from "@uiw/react-codemirror";
 import { monokai } from "@uiw/codemirror-theme-monokai";
 import { buildClientSchema, printSchema } from "graphql";
-// We use javascript highlighting as a fallback for GraphQL SDL which looks similar
 import { javascript } from "@codemirror/lang-javascript"; 
 
 export default function GraphqlSchemaView() {
@@ -18,9 +17,8 @@ export default function GraphqlSchemaView() {
     try {
       console.log(schema.queryType, schema.types?.length, schema.directives);
 
-      // Reconstruct the client schema from the introspection result
       const clientSchema = buildClientSchema({ __schema: schema });
-      // Print it to SDL string
+     
       return printSchema(clientSchema);
     } catch (e) {
       console.error("Failed to parse schema", e);

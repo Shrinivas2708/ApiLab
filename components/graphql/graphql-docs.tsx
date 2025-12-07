@@ -20,10 +20,8 @@ export default function DocsExplorer() {
     );
   }
 
-  // Helper to find type in schema types array
   const findType = (name: string) => schema.types.find((t: any) => t.name === name);
 
-  // Helper to unwrap NonNull/List wrappers to get the underlying named type
   const getNamedType = (typeObj: any): any => {
       if (!typeObj) return null;
       if (typeObj.name) return typeObj;
@@ -41,7 +39,6 @@ export default function DocsExplorer() {
 
   const currentType = docHistory.length > 0 ? docHistory[docHistory.length - 1] : null;
 
-  // Render Root View
   if (!currentType) {
     return (
       <div className="flex flex-col h-full bg-background">
@@ -76,7 +73,6 @@ export default function DocsExplorer() {
     );
   }
 
-  // Render Type Detail View
   return (
     <div className="flex flex-col h-full bg-background">
         <div className="p-2 border-b flex items-center gap-2 bg-muted/10 sticky top-0 z-10">
@@ -134,7 +130,6 @@ export default function DocsExplorer() {
                     </div>
                 )}
 
-                {/* INPUT FIELDS */}
                 {currentType.inputFields && (
                      <div className="space-y-4">
                      <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-1">Input Fields</div>
@@ -149,7 +144,6 @@ export default function DocsExplorer() {
                  </div>
                 )}
 
-                {/* ENUM VALUES */}
                  {currentType.enumValues && (
                      <div className="space-y-4">
                      <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-1">Enum Values</div>
@@ -167,8 +161,6 @@ export default function DocsExplorer() {
     </div>
   );
 }
-
-// Utility to recursively print type name (e.g. [User!]!)
 function getPrettyType(type: any): string {
     if (!type) return "";
     if (type.kind === "NON_NULL") return `${getPrettyType(type.ofType)}!`;

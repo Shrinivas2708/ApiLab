@@ -124,18 +124,19 @@ function CollectionTree() {
   const [targetParentId, setTargetParentId] = useState<string | null>(null);
 
   const fetchData = async () => {
-    if (!session) return;
-    try {
-      const res = await fetch("/api/collections");
-      if (res.ok) {
-        const flatData = await res.json();
-        const tree = buildTree(flatData);
-        setCollections(tree);
-      }
-    } catch (e) {
-      console.error(e);
+  if (!session) return;
+  try {
+    // FILTER: Only fetch REST collections
+    const res = await fetch("/api/collections?type=REST"); 
+    if (res.ok) {
+      const flatData = await res.json();
+      const tree = buildTree(flatData);
+      setCollections(tree);
     }
-  };
+  } catch (e) {
+    console.error(e);
+  }
+};
 
   useEffect(() => {
     function load(){
@@ -144,25 +145,26 @@ function CollectionTree() {
     load()
   }, [session]);
 
-  const openCreateDialog = (parentId: string | null = null) => {
+   const openCreateDialog = (parentId: string | null = null) => {
     setTargetParentId(parentId);
     setNewFolderName("");
     setCreateDialogOpen(true);
   };
 
   const handleCreateFolder = async () => {
-    if (!newFolderName.trim()) return;
-    await fetch("/api/collections", {
-      method: "POST",
-      body: JSON.stringify({
-        name: newFolderName,
-        parentId: targetParentId,
-        requests: [],
-      }),
-    });
-    setCreateDialogOpen(false);
-    fetchData();
-  };
+  if (!newFolderName.trim()) return;
+  await fetch("/api/collections", {
+    method: "POST",
+    body: JSON.stringify({
+      name: newFolderName,
+      parentId: targetParentId,
+      requests: [],
+      type: "REST" 
+    }),
+  });
+  setCreateDialogOpen(false);
+  fetchData();
+};
 
   const handleDeleteCollection = async (id: string) => {
     if (

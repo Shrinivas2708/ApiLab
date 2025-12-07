@@ -16,7 +16,7 @@ import {
 } from "@dnd-kit/sortable";
 import { Plus } from "lucide-react";
 import { useGraphqlStore } from "@/stores/graphql-store";
-import { SortableTab } from "@/components/tabs/sortable-tab"; // Reusing your existing sortable tab
+import { SortableTab } from "@/components/tabs/sortable-tab"; 
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
@@ -51,7 +51,7 @@ export function GraphqlTabs() {
                   key={tab.id}
                   id={tab.id}
                   name={tab.name || "Untitled"}
-                  method="GQL" // Static for GraphQL
+                  method="GQL"
                   isActive={tab.id === activeTabId}
                   onClick={setActiveTab}
                   onClose={handleClose}

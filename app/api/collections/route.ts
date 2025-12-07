@@ -7,7 +7,8 @@ import { NextResponse } from "next/server";
 
 const CreateCollectionSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  parentId: z.string().nullable().optional(), 
+  parentId: z.string().nullable().optional(),
+  type: z.enum(['REST', 'GRAPHQL']).optional().default('REST'), 
 });
 
 const AddRequestSchema = z.object({
@@ -25,44 +26,33 @@ const AddRequestSchema = z.object({
   }),
 });
 
-export async function GET() {
+export async function GET(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  const { searchParams } = new URL(req.url);
+  const type = searchParams.get("type"); 
+
   await connectDB();
-  const collections = await Collection.find({ userId: (session.user as any).id }).sort({ createdAt: -1 });
+  
+  const query: any = { userId: (session.user as any).id };
+  
+  if (type === 'GRAPHQL') {
+      // Strict filter for GraphQL
+      query.type = 'GRAPHQL';
+  } else {
+      // REST View: Include 'REST' OR documents where type is missing (legacy)
+      query.$or = [
+          { type: 'REST' },
+          { type: { $exists: false } },
+          { type: null }
+      ];
+  }
+
+  const collections = await Collection.find(query).sort({ createdAt: -1 });
   return NextResponse.json(collections);
 }
 
-export async function POST(req: Request) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-    const body = await req.json();
-    const validation = CreateCollectionSchema.safeParse(body);
-    if (!validation.success) {
-      return NextResponse.json({ error: validation.error.flatten() }, { status: 400 });
-    }
-
-    const { name, parentId } = validation.data;
-    await connectDB();
-
-    const validParentId = (parentId && parentId.trim() !== "") ? parentId : null;
-
-    const newCol = await Collection.create({
-      userId: (session.user as any).id,
-      name,
-      parentId: validParentId,
-      requests: []
-    });
-
-    return NextResponse.json(newCol);
-  } catch (error: any) {
-    console.error("Collection Create Error:", error);
-    return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
-  }
-}
 
 // Handle Save (Create New or Update Existing)
 export async function PUT(req: Request) {
@@ -145,6 +135,47 @@ export async function DELETE(req: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+export async function POST(req: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const body = await req.json();
+    
+    // 2. Validate the body (now including type)
+    const validation = CreateCollectionSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error.flatten() }, { status: 400 });
+    }
+
+    // 3. Extract type from validation data
+    const { name, parentId, type } = validation.data; 
+
+    await connectDB();
+
+    const validParentId = (parentId && parentId.trim() !== "") ? parentId : null;
+
+    // Optional: Inherit type if creating a subfolder
+    let finalType = type;
+    if (validParentId) {
+        const parent = await Collection.findById(validParentId);
+        if (parent && parent.type) finalType = parent.type;
+    }
+
+    const newCol = await Collection.create({
+      userId: (session.user as any).id,
+      name,
+      parentId: validParentId,
+      type: finalType, // 👈 4. Pass it to Mongoose
+      requests: []
+    });
+
+    return NextResponse.json(newCol);
+  } catch (error: any) {
+    console.error("Collection Create Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
