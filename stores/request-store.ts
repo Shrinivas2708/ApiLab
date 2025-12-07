@@ -45,7 +45,7 @@ export type ApiRequestTab = {
   url: string;
   queryParams: KeyValue[];
   headers: KeyValue[];
-  variables: KeyValue[]; // Request-local variables
+  variables: KeyValue[];
 
   bodyType: 'none' | 'json' | 'xml' | 'text' | 'form-data' | 'x-www-form-urlencoded' | 'binary';
   body: string;

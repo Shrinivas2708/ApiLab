@@ -52,10 +52,7 @@ export function TabBar() {
 
   return (
     <div className="flex w-full items-center border-b bg-muted/20 h-10 min-h-10">
-      {/* LAYOUT FIX: 
-         1. Added `min-w-0` to allow the ScrollArea to shrink below its content size in a flex container.
-         2. Removed `w-full` which forces 100% width, fighting against the Add button.
-      */}
+     
       <ScrollArea className="flex-1 min-w-0 w-full whitespace-nowrap border-r">
         <div className="flex h-full">
           <DndContext
