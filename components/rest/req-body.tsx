@@ -1,15 +1,21 @@
 "use client";
 
 import { useRequestStore } from "@/stores/request-store";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import CodeMirror from "@uiw/react-codemirror";
 import { json } from "@codemirror/lang-json";
 import { xml } from "@codemirror/lang-xml";
 import { monokai } from "@uiw/codemirror-theme-monokai";
 import { KeyValueTable } from "./key-value-table";
 import { Layers, FileUp, Trash2 } from "lucide-react";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
 
 export default function ReqBody() {
   const store = useRequestStore();
@@ -28,7 +34,7 @@ export default function ReqBody() {
       const reader = new FileReader();
       reader.onloadend = () => {
         const result = reader.result as string;
-        store.setBinaryFile(result); 
+        store.setBinaryFile(result);
       };
       reader.readAsDataURL(file);
     }
@@ -41,7 +47,9 @@ export default function ReqBody() {
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-2 px-4 ">
-        <span className="text-xs font-medium text-muted-foreground">Content Type:</span>
+        <span className="text-xs font-medium text-muted-foreground">
+          Content Type:
+        </span>
         <Select value={activeTab.bodyType} onValueChange={handleTypeChange}>
           <SelectTrigger className="w-[220px] h-8 text-xs ">
             <SelectValue placeholder="Select Body Type" />
@@ -52,7 +60,9 @@ export default function ReqBody() {
             <SelectItem value="xml">application/xml</SelectItem>
             <SelectItem value="text">text/plain</SelectItem>
             <SelectItem value="form-data">multipart/form-data</SelectItem>
-            <SelectItem value="x-www-form-urlencoded">x-www-form-urlencoded</SelectItem>
+            <SelectItem value="x-www-form-urlencoded">
+              x-www-form-urlencoded
+            </SelectItem>
             <SelectItem value="binary">application/octet-stream</SelectItem>
           </SelectContent>
         </Select>
@@ -72,19 +82,24 @@ export default function ReqBody() {
             height="100%"
             theme={monokai}
             extensions={
-              activeTab.bodyType === "json" ? [json()] : 
-              activeTab.bodyType === "xml" ? [xml()] : []
+              activeTab.bodyType === "json"
+                ? [json()]
+                : activeTab.bodyType === "xml"
+                ? [xml()]
+                : []
             }
             onChange={(val) => store.setBody(val)}
             className="h-full text-sm bg-muted-foreground/5!"
-            style={{ backgroundColor: 'red'  }}
+            style={{ backgroundColor: "red" }}
           />
         )}
 
-        {["form-data", "x-www-form-urlencoded"].includes(activeTab.bodyType) && (
-          <KeyValueTable 
-            items={activeTab.bodyParams} 
-            setItems={store.setBodyParams} 
+        {["form-data", "x-www-form-urlencoded"].includes(
+          activeTab.bodyType
+        ) && (
+          <KeyValueTable
+            items={activeTab.bodyParams}
+            setItems={store.setBodyParams}
           />
         )}
 
@@ -95,11 +110,13 @@ export default function ReqBody() {
                 <FileUp size={48} className="text-muted-foreground" />
                 <div className="text-center space-y-1">
                   <p className="text-sm font-medium">Select a file to upload</p>
-                  <p className="text-xs text-muted-foreground">Any file type supported</p>
+                  <p className="text-xs text-muted-foreground">
+                    Any file type supported
+                  </p>
                 </div>
-                <Input 
-                  type="file" 
-                  className="max-w-[250px] cursor-pointer" 
+                <Input
+                  type="file"
+                  className="max-w-[250px] cursor-pointer"
                   onChange={handleFileChange}
                 />
               </div>
@@ -116,7 +133,12 @@ export default function ReqBody() {
                     </p>
                   </div>
                 </div>
-                <Button variant="destructive" size="sm" onClick={clearFile} className="gap-2">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={clearFile}
+                  className="gap-2"
+                >
                   <Trash2 size={14} /> Remove File
                 </Button>
               </div>

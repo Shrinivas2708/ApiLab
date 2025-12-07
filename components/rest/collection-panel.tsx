@@ -15,15 +15,15 @@ import {
   Clock,
   CodeIcon,
 } from "lucide-react";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { ScrollArea } from "./ui/scroll-area";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { ScrollArea } from "../ui/scroll-area";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
+} from "../ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -60,9 +60,9 @@ const buildTree = (items: CollectionType[]) => {
 };
 
 export default function CollectionsPanel() {
-  const [activeView, setActiveView] = useState<"collections" | "history" | "code">(
-    "collections"
-  );
+  const [activeView, setActiveView] = useState<
+    "collections" | "history" | "code"
+  >("collections");
 
   return (
     <div className="flex h-full w-full bg-[#111111] text-foreground border-l border-border/40">
@@ -107,7 +107,13 @@ export default function CollectionsPanel() {
       </div>
 
       <div className="flex-1 flex flex-col min-w-0">
-        {activeView === "collections" ? <CollectionTree /> : activeView === "history" ? <HistoryPanel /> : <CodeSnippet />}
+        {activeView === "collections" ? (
+          <CollectionTree />
+        ) : activeView === "history" ? (
+          <HistoryPanel />
+        ) : (
+          <CodeSnippet />
+        )}
       </div>
     </div>
   );
@@ -124,47 +130,47 @@ function CollectionTree() {
   const [targetParentId, setTargetParentId] = useState<string | null>(null);
 
   const fetchData = async () => {
-  if (!session) return;
-  try {
-    // FILTER: Only fetch REST collections
-    const res = await fetch("/api/collections?type=REST"); 
-    if (res.ok) {
-      const flatData = await res.json();
-      const tree = buildTree(flatData);
-      setCollections(tree);
+    if (!session) return;
+    try {
+      // FILTER: Only fetch REST collections
+      const res = await fetch("/api/collections?type=REST");
+      if (res.ok) {
+        const flatData = await res.json();
+        const tree = buildTree(flatData);
+        setCollections(tree);
+      }
+    } catch (e) {
+      console.error(e);
     }
-  } catch (e) {
-    console.error(e);
-  }
-};
+  };
 
   useEffect(() => {
-    function load(){
+    function load() {
       fetchData();
     }
-    load()
+    load();
   }, [session]);
 
-   const openCreateDialog = (parentId: string | null = null) => {
+  const openCreateDialog = (parentId: string | null = null) => {
     setTargetParentId(parentId);
     setNewFolderName("");
     setCreateDialogOpen(true);
   };
 
   const handleCreateFolder = async () => {
-  if (!newFolderName.trim()) return;
-  await fetch("/api/collections", {
-    method: "POST",
-    body: JSON.stringify({
-      name: newFolderName,
-      parentId: targetParentId,
-      requests: [],
-      type: "REST" 
-    }),
-  });
-  setCreateDialogOpen(false);
-  fetchData();
-};
+    if (!newFolderName.trim()) return;
+    await fetch("/api/collections", {
+      method: "POST",
+      body: JSON.stringify({
+        name: newFolderName,
+        parentId: targetParentId,
+        requests: [],
+        type: "REST",
+      }),
+    });
+    setCreateDialogOpen(false);
+    fetchData();
+  };
 
   const handleDeleteCollection = async (id: string) => {
     if (

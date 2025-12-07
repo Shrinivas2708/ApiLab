@@ -6,7 +6,7 @@ import CodeMirror, { EditorView } from "@uiw/react-codemirror";
 import { javascript } from "@codemirror/lang-javascript";
 import { json } from "@codemirror/lang-json";
 import { monokai } from "@uiw/codemirror-theme-monokai";
-import { KeyValueTable } from "@/components/key-value-table";
+import { KeyValueTable } from "@/components/rest/key-value-table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";

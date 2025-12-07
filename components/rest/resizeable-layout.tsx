@@ -1,8 +1,8 @@
 "use client";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
-import { Sidebar } from "@/components/sidebar";
+import { Sidebar } from "@/components/rest/sidebar";
 import Navbar from "@/components/navbar";
-import Footer from "./footer";
+import Footer from "../footer";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (

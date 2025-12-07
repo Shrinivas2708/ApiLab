@@ -5,14 +5,12 @@ import { monokai } from "@uiw/codemirror-theme-monokai";
 import { EditorView } from "@codemirror/view";
 import { detectResponseType } from "@/utils/detect-type";
 import { formatResponse } from "@/utils/format-response";
-import { Badge } from "./ui/badge";
+import { Badge } from "../ui/badge";
 import Image from "next/image";
 import { useMemo, useState } from "react";
 import { Check, Copy, Download, Eraser, Eye } from "lucide-react";
 import { handleDownload } from "@/utils/download";
-import { EyeOff } from "./icons/eye-off";
-
-
+import { EyeOff } from "../icons/eye-off";
 
 type ResponseTab = "data" | "raw" | "headers";
 
@@ -21,7 +19,8 @@ export default function ResponsePanel() {
   const [isCopied, setIsCopied] = useState(false);
   const [previewHtml, setPreviewHtml] = useState(false);
   // 1. Add state for the tabs
-  const [activeResponseTab, setActiveResponseTab] = useState<ResponseTab>("data");
+  const [activeResponseTab, setActiveResponseTab] =
+    useState<ResponseTab>("data");
 
   // Get Active Tab Data
   const activeTab = store.tabs.find((t) => t.id === store.activeTabId);
@@ -59,10 +58,10 @@ export default function ResponsePanel() {
     );
   if (CORSError)
     return (
-       <div className="h-full flex flex-col items-center justify-center border-l">
+      <div className="h-full flex flex-col items-center justify-center border-l">
         <p className="text-sm text-muted-foreground">Network Error (CORS)</p>
         <p className="text-sm text-muted-foreground">Switching to proxy</p>
-       </div>
+      </div>
     );
 
   if (!response)
@@ -84,8 +83,9 @@ export default function ResponsePanel() {
   };
 
   function renderHeaders() {
-    if (!response?.headers) return <div className="p-4 text-muted-foreground">No headers found.</div>;
-    
+    if (!response?.headers)
+      return <div className="p-4 text-muted-foreground">No headers found.</div>;
+
     const headerEntries = Object.entries(response.headers);
 
     return (
@@ -100,8 +100,12 @@ export default function ResponsePanel() {
           <tbody className="divide-y divide-border">
             {headerEntries.map(([key, value], index) => (
               <tr key={`${key}-${index}`} className="hover:bg-muted/10">
-                <td className="px-4 py-2 font-mono text-muted-foreground whitespace-nowrap align-top">{key}</td>
-                <td className="px-4 py-2 break-all text-foreground font-mono">{String(value)}</td>
+                <td className="px-4 py-2 font-mono text-muted-foreground whitespace-nowrap align-top">
+                  {key}
+                </td>
+                <td className="px-4 py-2 break-all text-foreground font-mono">
+                  {String(value)}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -118,7 +122,11 @@ export default function ResponsePanel() {
     if (activeResponseTab === "raw") {
       return (
         <CodeMirror
-          value={typeof formatted === 'string' ? formatted : "Binary Data (Cannot view raw text)"}
+          value={
+            typeof formatted === "string"
+              ? formatted
+              : "Binary Data (Cannot view raw text)"
+          }
           theme={monokai}
           height="100%"
           extensions={[EditorView.lineWrapping]}
@@ -136,32 +144,53 @@ export default function ResponsePanel() {
           value={formatted}
           theme={monokai}
           height="100%"
-          extensions={extension ? [extension, EditorView.lineWrapping] : [EditorView.lineWrapping]}
+          extensions={
+            extension
+              ? [extension, EditorView.lineWrapping]
+              : [EditorView.lineWrapping]
+          }
           editable={false}
-          basicSetup={{ lineNumbers: true, highlightActiveLine: false, highlightActiveLineGutter: false }}
+          basicSetup={{
+            lineNumbers: true,
+            highlightActiveLine: false,
+            highlightActiveLineGutter: false,
+          }}
           className="h-full"
           style={{ fontSize: "12px", background: "transparent" }}
         />
       );
     }
-    
+
     if (type === "html") {
       return previewHtml ? (
-        <iframe srcDoc={formatted} frameBorder="0" className="w-full h-full bg-white" title="HTML Preview" />
+        <iframe
+          srcDoc={formatted}
+          frameBorder="0"
+          className="w-full h-full bg-white"
+          title="HTML Preview"
+        />
       ) : (
         <CodeMirror
           value={formatted}
           theme={monokai}
           height="100%"
-          extensions={extension ? [extension, EditorView.lineWrapping] : [EditorView.lineWrapping]}
+          extensions={
+            extension
+              ? [extension, EditorView.lineWrapping]
+              : [EditorView.lineWrapping]
+          }
           editable={false}
-          basicSetup={{ lineNumbers: true, highlightActiveLine: false, highlightActiveLineGutter: false }}
+          basicSetup={{
+            lineNumbers: true,
+            highlightActiveLine: false,
+            highlightActiveLineGutter: false,
+          }}
           className="h-full"
           style={{ fontSize: "12px", background: "transparent" }}
         />
       );
     }
-    
+
     if (type === "image") {
       return (
         <div className="w-full h-full flex items-center justify-center bg-black/20">
@@ -179,7 +208,11 @@ export default function ResponsePanel() {
     if (type === "video") {
       return (
         <div className="w-full h-full flex items-center justify-center bg-black">
-            <video controls className="max-w-full max-h-full" src={`data:${response.contentType};base64,${response.base64}`} />
+          <video
+            controls
+            className="max-w-full max-h-full"
+            src={`data:${response.contentType};base64,${response.base64}`}
+          />
         </div>
       );
     }
@@ -187,16 +220,29 @@ export default function ResponsePanel() {
     if (type === "audio") {
       return (
         <div className="w-full h-full flex items-center justify-center bg-muted/10">
-            <audio controls src={`data:${response.contentType};base64,${response.base64}`} className="w-96" />
+          <audio
+            controls
+            src={`data:${response.contentType};base64,${response.base64}`}
+            className="w-96"
+          />
         </div>
       );
     }
 
     if (type === "pdf") {
-      return <iframe className="w-full h-full" src={`data:${response.contentType};base64,${response.base64}`} />;
+      return (
+        <iframe
+          className="w-full h-full"
+          src={`data:${response.contentType};base64,${response.base64}`}
+        />
+      );
     }
 
-    return <div className="p-4 text-muted-foreground">Unsupported Content Type: {response.contentType}</div>;
+    return (
+      <div className="p-4 text-muted-foreground">
+        Unsupported Content Type: {response.contentType}
+      </div>
+    );
   }
 
   function renderOptions() {
@@ -205,13 +251,22 @@ export default function ResponsePanel() {
     if (["json", "xml", "text"].includes(type) || activeResponseTab === "raw") {
       return (
         <div className="flex gap-2">
-          <Download className="h-4 w-4 hover:text-foreground cursor-pointer" onClick={() => handleDownload(response)} />
+          <Download
+            className="h-4 w-4 hover:text-foreground cursor-pointer"
+            onClick={() => handleDownload(response)}
+          />
           {isCopied ? (
             <Check className="h-4 w-4 text-green-500" />
           ) : (
-            <Copy className="h-4 w-4 hover:text-foreground cursor-pointer" onClick={handleCopy} />
+            <Copy
+              className="h-4 w-4 hover:text-foreground cursor-pointer"
+              onClick={handleCopy}
+            />
           )}
-          <Eraser className="h-4 w-4 hover:text-foreground cursor-pointer" onClick={() => store.setResponse(null)} />
+          <Eraser
+            className="h-4 w-4 hover:text-foreground cursor-pointer"
+            onClick={() => store.setResponse(null)}
+          />
         </div>
       );
     }
@@ -220,25 +275,46 @@ export default function ResponsePanel() {
       return (
         <div className="flex gap-2">
           {previewHtml ? (
-            <EyeOff className="h-4 w-4 hover:text-foreground cursor-pointer" onClick={() => setPreviewHtml(!previewHtml)} />
+            <EyeOff
+              className="h-4 w-4 hover:text-foreground cursor-pointer"
+              onClick={() => setPreviewHtml(!previewHtml)}
+            />
           ) : (
-            <Eye className="h-4 w-4 hover:text-foreground cursor-pointer" onClick={() => setPreviewHtml(!previewHtml)} />
+            <Eye
+              className="h-4 w-4 hover:text-foreground cursor-pointer"
+              onClick={() => setPreviewHtml(!previewHtml)}
+            />
           )}
-          <Download className="h-4 w-4 hover:text-foreground cursor-pointer" onClick={() => handleDownload(response)} />
-          <Eraser className="h-4 w-4 hover:text-foreground cursor-pointer" onClick={() => store.setResponse(null)} />
+          <Download
+            className="h-4 w-4 hover:text-foreground cursor-pointer"
+            onClick={() => handleDownload(response)}
+          />
+          <Eraser
+            className="h-4 w-4 hover:text-foreground cursor-pointer"
+            onClick={() => store.setResponse(null)}
+          />
         </div>
       );
     }
 
     return (
       <div className="flex gap-2">
-        <Download className="h-4 w-4 hover:text-foreground cursor-pointer" onClick={() => handleDownload(response)} />
-        <Eraser className="h-4 w-4 hover:text-foreground cursor-pointer" onClick={() => store.setResponse(null)} />
+        <Download
+          className="h-4 w-4 hover:text-foreground cursor-pointer"
+          onClick={() => handleDownload(response)}
+        />
+        <Eraser
+          className="h-4 w-4 hover:text-foreground cursor-pointer"
+          onClick={() => store.setResponse(null)}
+        />
       </div>
     );
   }
 
-  const statusColor = response.status >= 200 && response.status < 300 ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500";
+  const statusColor =
+    response.status >= 200 && response.status < 300
+      ? "bg-green-500/10 text-green-500"
+      : "bg-red-500/10 text-red-500";
 
   return (
     <div className="h-full flex flex-col border-l">
@@ -247,11 +323,18 @@ export default function ResponsePanel() {
           {response.status} {response.statusText}
         </Badge>
         <div className="text-xs text-muted-foreground">
-          Time: <span className={`${statusColor} bg-transparent hover:bg-transparent`}>{response.time}ms</span>
+          Time:{" "}
+          <span
+            className={`${statusColor} bg-transparent hover:bg-transparent`}
+          >
+            {response.time}ms
+          </span>
         </div>
         <div className="text-xs text-muted-foreground">
           Size:{" "}
-          <span className={`${statusColor} bg-transparent hover:bg-transparent`}>
+          <span
+            className={`${statusColor} bg-transparent hover:bg-transparent`}
+          >
             {response.size < 1000
               ? `${response.size} B`
               : response.size < 1000000
@@ -265,7 +348,7 @@ export default function ResponsePanel() {
 
       <div className="text-sm border-b px-2 text-muted-foreground bg-muted/10">
         <ul className="flex gap-1">
-          {(['data', 'raw', 'headers'] as const).map((tab) => (
+          {(["data", "raw", "headers"] as const).map((tab) => (
             <li
               key={tab}
               onClick={() => setActiveResponseTab(tab)}
@@ -283,7 +366,9 @@ export default function ResponsePanel() {
 
       <div className="border-b text-xs px-2 py-1 bg-muted/10 text-muted-foreground flex justify-between items-center h-8">
         <p>
-          {activeResponseTab === 'headers' ? 'Response Headers' : `Response Body (${type})`}
+          {activeResponseTab === "headers"
+            ? "Response Headers"
+            : `Response Body (${type})`}
         </p>
         <div>{renderOptions()}</div>
       </div>
