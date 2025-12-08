@@ -117,7 +117,7 @@ const createNewTab = (): ApiRequestTab => ({
   id: crypto.randomUUID(),
   name: 'Untitled Request',
   method: 'GET',
-  url: 'https://apilabs.shriii.xyz/api/echo',
+  url: 'https://apilab.shriii.xyz/api/echo',
   reqMode: 'browser',
   queryParams: [{ id: crypto.randomUUID(), key: '', value: '', description: '', enabled: true }],
   headers: [{ id: crypto.randomUUID(), key: '', value: '', description: '', enabled: true }],

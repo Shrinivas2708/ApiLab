@@ -63,7 +63,7 @@ const createDefaultConnection = (protocol: Protocol): RealtimeConnection => ({
     protocol === "websocket"
       ? "wss://echo-server-apilab.onrender.com/ws"
       : protocol === "sse"
-      ? "https://apilabs.shriii.xyz/api/echo/sse"
+      ? "https://apilab.shriii.xyz/api/echo/sse"
       : protocol === "socketio"
       ? "https://echo-server-apilab.onrender.com"
       : "wss://test.mosquitto.org:8081",
