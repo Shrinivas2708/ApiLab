@@ -61,11 +61,11 @@ const createDefaultConnection = (protocol: Protocol): RealtimeConnection => ({
   protocol,
   url:
     protocol === "websocket"
-      ? "wss://echo.apilabs.shriii.xyz"
+      ? "wss://echo-server-apilab.onrender.com/ws"
       : protocol === "sse"
       ? "https://apilabs.shriii.xyz/api/echo/sse"
       : protocol === "socketio"
-      ? "wss://echo.apilabs.shriii.xyz"
+      ? "https://echo-server-apilab.onrender.com"
       : "wss://test.mosquitto.org:8081",
   isConnected: false,
   messages: [],
@@ -195,10 +195,9 @@ export const useRealtimeStore = create<RealtimeState>()(
             state.connectionInstances.set(protocol, eventSource);
           } else if (protocol === "socketio") {
             const socket = io(connection.url, {
-              path: connection.socketPath || "/socket.io",
+                path: connection.socketPath || "/socket.io",
               transports: ["websocket"], // ✅ avoid polling
             });
-socket.removeAllListeners();
             socket.on("connect", () => {
               state.updateConnection(protocol, { isConnected: true });
               state.addMessage(protocol, {
