@@ -28,7 +28,6 @@ export type GraphqlTab = {
   collectionId?: string;
 };
 
-// Simple Collection Type for Local Storage
 export type LocalCollection = {
   _id: string;
   name: string;
@@ -38,19 +37,12 @@ export type LocalCollection = {
 interface GraphqlState {
   tabs: GraphqlTab[];
   activeTabId: string | null;
-  
-  // Connection State
   connectedEndpoint: string | null; 
   isConnecting: boolean;
-
-  // Local Collections (for non-logged in users)
   localCollections: LocalCollection[];
-
-  // Docs State
   activeRightSidebar: 'docs' | 'schema' | 'collections' | null;
   docHistory: any[];
 
-  // Actions
   addTab: () => void;
   closeTab: (id: string) => void;
   setActiveTab: (id: string) => void;
@@ -58,18 +50,13 @@ interface GraphqlState {
   updateTab: (id: string, data: Partial<GraphqlTab>) => void;
   reorderTabs: (activeId: string, overId: string) => void;
   
-  // Connection
   connect: (url: string) => Promise<boolean>;
   disconnect: () => void;
-  
-  // Execution
   runQuery: () => Promise<void>;
   
-  // Collections
   saveRequestToCollection: (req: GraphqlTab, collectionId: string, name: string) => void;
   createLocalCollection: (name: string) => void;
   
-  // UI
   setActiveRightSidebar: (view: 'docs' | 'schema' | 'collections' | null) => void;
   pushDocHistory: (item: any) => void;
   popDocHistory: () => void;
@@ -92,11 +79,14 @@ const createNewTab = (): GraphqlTab => ({
   isDirty: false
 });
 
+// FIX: Create initial tab outside store so we have a stable ID
+const _initialTab = createNewTab();
+
 export const useGraphqlStore = create<GraphqlState>()(
   persist(
     (set, get) => ({
-      tabs: [createNewTab()],
-      activeTabId: null,
+      tabs: [_initialTab],
+      activeTabId: _initialTab.id, // FIX: was null — now initialised to first tab's ID
       connectedEndpoint: null,
       isConnecting: false,
       localCollections: [],
@@ -143,14 +133,12 @@ export const useGraphqlStore = create<GraphqlState>()(
           return { tabs: arrayMove(state.tabs, oldIndex, newIndex) };
       }),
 
-      // --- Connection Logic ---
       connect: async (url: string) => {
         const state = get();
         state.updateActiveTab({ loading: true });
         set({ isConnecting: true });
 
         try {
-            // Introspection via Proxy
             const res = await fetch("/api/proxy", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -163,14 +151,11 @@ export const useGraphqlStore = create<GraphqlState>()(
             });
             
             const data = await res.json();
-            // Proxy returns { data: { data: { __schema: ... } } }
             const schemaData = data.data?.data?.__schema || data.data?.__schema;
 
             if (schemaData) {
                 state.updateActiveTab({ schema: schemaData, loading: false });
                 set({ connectedEndpoint: url, isConnecting: false });
-                
-                // Auto-open docs on successful connect
                 state.setActiveRightSidebar('docs');
                 state.resetDocHistory();
                 return true;
@@ -190,7 +175,6 @@ export const useGraphqlStore = create<GraphqlState>()(
           get().updateActiveTab({ schema: null });
       },
 
-      // --- Execution Logic ---
       runQuery: async () => {
         const state = get();
         const activeTab = state.tabs.find(t => t.id === state.activeTabId);
@@ -243,7 +227,6 @@ export const useGraphqlStore = create<GraphqlState>()(
         }
       },
 
-      // --- Collection Logic ---
       createLocalCollection: (name) => set((state) => ({
           localCollections: [...state.localCollections, { _id: crypto.randomUUID(), name, requests: [] }]
       })),
@@ -251,7 +234,6 @@ export const useGraphqlStore = create<GraphqlState>()(
       saveRequestToCollection: (req, collectionId, name) => set((state) => {
           const updatedCol = state.localCollections.map(c => {
               if (c._id === collectionId) {
-                  // Check if updating existing
                   const exists = c.requests.find(r => r.id === req.id);
                   if (exists) {
                       return { ...c, requests: c.requests.map(r => r.id === req.id ? { ...req, name } : r) };
@@ -263,7 +245,6 @@ export const useGraphqlStore = create<GraphqlState>()(
           return { localCollections: updatedCol };
       }),
 
-      // --- UI Actions ---
       setActiveRightSidebar: (view) => set({ activeRightSidebar: view }),
       pushDocHistory: (item) => set((state) => ({ docHistory: [...state.docHistory, item] })),
       popDocHistory: () => set((state) => ({ docHistory: state.docHistory.slice(0, -1) })),
@@ -272,8 +253,17 @@ export const useGraphqlStore = create<GraphqlState>()(
     {
       name: 'apilab-graphql-store-v2',
       storage: createJSONStorage(() => localStorage),
+      // FIX: ensure activeTabId is always valid after rehydration
       onRehydrateStorage: () => (state) => {
-        if (!state?.tabs || state.tabs.length === 0) state?.addTab();
+        if (state) {
+          if (!state.tabs || state.tabs.length === 0) {
+            const fresh = createNewTab();
+            state.tabs = [fresh];
+            state.activeTabId = fresh.id;
+          } else if (!state.activeTabId || !state.tabs.find((t: GraphqlTab) => t.id === state.activeTabId)) {
+            state.activeTabId = state.tabs[0].id;
+          }
+        }
       }
     }
   )

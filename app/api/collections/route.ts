@@ -13,7 +13,7 @@ const CreateCollectionSchema = z.object({
 
 const AddRequestSchema = z.object({
   collectionId: z.string().min(1, "Collection ID is required"),
-  requestId: z.string().optional(), // Optional: if present, we update
+  requestId: z.string().optional(), 
   request: z.object({
     name: z.string().min(1, "Request name is required"),
     method: z.string(),
