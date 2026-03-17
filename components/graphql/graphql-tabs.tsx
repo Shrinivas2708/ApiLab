@@ -44,7 +44,7 @@ export function GraphqlTabs() {
     <div className="flex w-full items-center border-b bg-muted/20 h-10 min-h-10">
       <ScrollArea className="flex-1 min-w-0 w-full whitespace-nowrap border-r">
         <div className="flex h-full">
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} id="graphql-tabs">
             <SortableContext items={tabs.map((t) => t.id)} strategy={horizontalListSortingStrategy}>
               {tabs.map((tab) => (
                 <SortableTab

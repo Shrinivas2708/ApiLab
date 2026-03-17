@@ -65,6 +65,7 @@ export function TabBar() {
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}
+            id="rest-tabs"
           >
             <SortableContext
               items={tabs.map((t) => t.id)}
